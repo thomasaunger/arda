@@ -42,8 +42,7 @@ while running:
             Arda.actions[Arda.GREEN]["NONE"],
             Arda.actions[Arda.BLUE]["NONE"],
         ], dtype=np.int8
-        ) for agent_id in range(env.num_agents)
-    }
+    ) for agent_id in range(env.num_agents)}
 
     if keys[pg.K_UP]:
         print("UP")
