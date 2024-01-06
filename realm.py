@@ -89,6 +89,8 @@ class Realm(gym.Env):
 
         self.last_move_legal = [True]*self.num_agents
 
+        self.first_action = [True]*self.num_agents
+
     def step(self, actions=None):
         # Perform one step in the environment
 
@@ -100,9 +102,11 @@ class Realm(gym.Env):
                 case Realm.LEFT:
                     self.agent_orientations[i] -= 1
                     self.last_move_legal[i] = True
+                    self.first_action[i] = False
                 case Realm.RIGHT:
                     self.agent_orientations[i] += 1
                     self.last_move_legal[i] = True
+                    self.first_action[i] = False
             
             self.agent_orientations[i] %= NUM_ORIENTATIONS
             
@@ -112,12 +116,16 @@ class Realm(gym.Env):
                     match self.agent_orientations[i]:
                         case Realm.NORTH:
                             new_location[Realm.Y] -= 1
+                            self.first_action[i] = False
                         case Realm.EAST:
                             new_location[Realm.X] += 1
+                            self.first_action[i] = False
                         case Realm.SOUTH:
                             new_location[Realm.Y] += 1
+                            self.first_action[i] = False
                         case Realm.WEST:
                             new_location[Realm.X] -= 1
+                            self.first_action[i] = False
                     
                     new_location = np.clip(new_location, 0, np.array(self.grid.shape) - 1)
 
