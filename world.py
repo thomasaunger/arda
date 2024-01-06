@@ -37,7 +37,7 @@ while running:
 
     action = False
 
-    t_delta = 0.1
+    t_delta = 0.15
 
     if keys[pg.K_UP] and (not prev_keys[pg.K_UP] or (time.time() - t_press > t_delta and not world.first_action[PLAYER_A] and world.last_move_legal[PLAYER_A])):
         print("UP")
