@@ -139,9 +139,6 @@ class Realm(gym.Env):
         info = None
 
         return obss, rewards, done, info
-    
-    def render(self, *args, **kwargs):
-        return 
 
     def close(self):
         # Clean up resources
