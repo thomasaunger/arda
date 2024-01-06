@@ -17,7 +17,7 @@ class Seen(Realm):
         # Create a window
         self.screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         
-        pg.display.set_caption("Arda")
+        pg.display.set_caption("Realm")
 
     def _agent_image(self, i, margin):
         y_width = 32
