@@ -42,7 +42,7 @@ while running:
 
     t_delta = 0.1
 
-    if keys[pg.K_UP] and (not prev_keys[pg.K_UP] or (time.time() - t_press > t_delta and not first_press[PLAYER_A])):
+    if keys[pg.K_UP] and (not prev_keys[pg.K_UP] or (time.time() - t_press > t_delta and not first_press[PLAYER_A] and world.last_move_legal[PLAYER_A])):
         print("UP")
         actions[PLAYER_A][Realm.MOVE] = Realm.actions[Realm.MOVE]["FORWARD"]
         change = True
@@ -58,7 +58,7 @@ while running:
         change = True
         first_press[PLAYER_A] = False
     
-    if keys[pg.K_i] and (not prev_keys[pg.K_i] or (time.time() - t_press > t_delta and not first_press[PLAYER_B])):
+    if keys[pg.K_i] and (not prev_keys[pg.K_i] or (time.time() - t_press > t_delta and not first_press[PLAYER_B] and world.last_move_legal[PLAYER_B])):
         print("i")
         actions[PLAYER_B][Realm.MOVE] = Realm.actions[Realm.MOVE]["FORWARD"]
         change = True

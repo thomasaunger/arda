@@ -87,6 +87,8 @@ class Realm(gym.Env):
 
         self.time_step = 0
 
+        self.last_move_legal = [True]*self.num_agents
+
     def step(self, actions=None):
         # Perform one step in the environment
 
@@ -97,8 +99,10 @@ class Realm(gym.Env):
             match action[Realm.TURN]:
                 case Realm.LEFT:
                     self.agent_orientations[i] -= 1
+                    self.last_move_legal[i] = True
                 case Realm.RIGHT:
                     self.agent_orientations[i] += 1
+                    self.last_move_legal[i] = True
             
             self.agent_orientations[i] %= NUM_ORIENTATIONS
             
@@ -123,6 +127,9 @@ class Realm(gym.Env):
                         self.grid[self.agent_locations[i][Realm.Y], self.agent_locations[i][Realm.X]] = 0
                         self.grid[new_location[Realm.Y], new_location[Realm.X]] = 1
                         self.agent_locations[i] = new_location
+                        self.last_move_legal[i] = True
+                    else:    
+                        self.last_move_legal[i] = False
 
         self.time_step += 1
 
