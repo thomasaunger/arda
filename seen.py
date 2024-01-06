@@ -2,8 +2,8 @@ import pygame as pg
 
 from realm import Realm
 
-SCREEN_WIDTH  = 1920
-SCREEN_HEIGHT = 1080
+SCREEN_WIDTH  = 640
+SCREEN_HEIGHT = 480
 
 
 class Seen(Realm):
