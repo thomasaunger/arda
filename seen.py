@@ -1,6 +1,6 @@
 import pygame as pg
 
-from realm import Realm
+from blessed_realm import BlessedRealm as Realm
 
 SCREEN_WIDTH  = 640
 SCREEN_HEIGHT = 480
@@ -32,14 +32,14 @@ class Seen(Realm):
         match self.agent_orientations[i]:
             case Realm.NORTH:
                 return [
-                    (x_offset +  x     *x_width       + margin, y_offset + (y + 1)*y_width - margin),
-                    (x_offset + (x + 1)*x_width       - margin, y_offset + (y + 1)*y_width - margin),
+                    (x_offset +  x     *x_width + margin,       y_offset + (y + 1)*y_width - margin),
+                    (x_offset + (x + 1)*x_width - margin,       y_offset + (y + 1)*y_width - margin),
                     (x_offset +  x     *x_width + x_width // 2, y_offset +  y     *y_width + margin),
                 ]
             case Realm.EAST:
                 return [
-                    (x_offset +  x*x_width + margin,      y_offset +  y     *y_width + margin),
-                    (x_offset +  x*x_width + margin,      y_offset + (y + 1)*y_width - margin),
+                    (x_offset +  x     *x_width + margin, y_offset +  y     *y_width + margin),
+                    (x_offset +  x     *x_width + margin, y_offset + (y + 1)*y_width - margin),
                     (x_offset + (x + 1)*x_width - margin, y_offset +  y     *y_width + y_width // 2),
                 ]
             case Realm.SOUTH:

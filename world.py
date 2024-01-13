@@ -11,12 +11,14 @@ PLAYER_B = 1
 # Create an instance of the Seen environment
 world = Realm(num_agents=2)
 world.reset()
+len_str_episode_length = len(str(world.episode_length))
 
-# initial key presses
+# Initial key presses
 keys = pg.key.get_pressed()
 
 # Game loop
 t_press = 1000000
+t_delta = 0.15
 running = True
 while running:
     # Handle events
@@ -27,49 +29,52 @@ while running:
     prev_keys = keys
     keys = pg.key.get_pressed()
 
-    # default actions
+    # Default actions
     actions = {agent_id: np.array(
         [
-            Realm.actions[Realm.TURN]["NONE"],
-            Realm.actions[Realm.MOVE]["NONE"],
-        ], dtype=np.int8
+            world.actions[world.TURN]["NONE"],
+            world.actions[world.MOVE]["NONE"],
+        ], dtype=world.int_dtype
     ) for agent_id in range(world.num_agents)}
+
+    buttons = ["", ""]
 
     action = False
 
-    t_delta = 0.15
-
     if keys[pg.K_UP] and (not prev_keys[pg.K_UP] or (time.time() - t_press > t_delta and not world.first_action[PLAYER_A] and world.last_move_legal[PLAYER_A])):
-        print("UP")
-        actions[PLAYER_A][Realm.MOVE] = Realm.actions[Realm.MOVE]["FORWARD"]
+        actions[PLAYER_A][world.MOVE] = world.actions[world.MOVE]["FORWARD"]
         action = True
+        buttons[PLAYER_A] = "UP"
     elif keys[pg.K_RIGHT] and (not prev_keys[pg.K_RIGHT] or (time.time() - t_press > t_delta and not world.first_action[PLAYER_A])):
-        print("RIGHT")
-        actions[PLAYER_A][Realm.TURN] = Realm.actions[Realm.TURN]["RIGHT"]
+        actions[PLAYER_A][world.TURN] = world.actions[world.TURN]["RIGHT"]
         action = True
+        buttons[PLAYER_A] = "RIGHT"
     elif keys[pg.K_LEFT] and (not prev_keys[pg.K_LEFT] or (time.time() - t_press > t_delta and not world.first_action[PLAYER_A])):
-        print("LEFT")
-        actions[PLAYER_A][Realm.TURN] = Realm.actions[Realm.TURN]["LEFT"]
+        actions[PLAYER_A][world.TURN] = world.actions[world.TURN]["LEFT"]
         action = True
+        buttons[PLAYER_A] = "LEFT"
     
     if keys[pg.K_i] and (not prev_keys[pg.K_i] or (time.time() - t_press > t_delta and not world.first_action[PLAYER_B] and world.last_move_legal[PLAYER_B])):
-        print("i")
-        actions[PLAYER_B][Realm.MOVE] = Realm.actions[Realm.MOVE]["FORWARD"]
+        actions[PLAYER_B][world.MOVE] = world.actions[world.MOVE]["FORWARD"]
         action = True
+        buttons[PLAYER_B] = "i"
     elif keys[pg.K_l] and (not prev_keys[pg.K_l] or (time.time() - t_press > t_delta and not world.first_action[PLAYER_B])):
-        print("l")
-        actions[PLAYER_B][Realm.TURN] = Realm.actions[Realm.TURN]["RIGHT"]
+        actions[PLAYER_B][world.TURN] = world.actions[world.TURN]["RIGHT"]
         action = True
+        buttons[PLAYER_B] = "l"
     elif keys[pg.K_j] and (not prev_keys[pg.K_j] or (time.time() - t_press > t_delta and not world.first_action[PLAYER_B])):
-        print("j")
-        actions[PLAYER_B][Realm.TURN] = Realm.actions[Realm.TURN]["LEFT"]
+        actions[PLAYER_B][world.TURN] = world.actions[world.TURN]["LEFT"]
         action = True
+        buttons[PLAYER_B] = "j"
 
     if action:
         t_press = time.time()
-        _, _, done, _ = world.step(actions)
+        _, rewards, done, _ = world.step(actions)
         if done:
             world.reset()
+        print(f"{world.time_step:>{len_str_episode_length}}:\n"
+              f"  actions: {buttons}\n"
+              f"  rewards: {rewards}")
 
     # Render the game
     world.render()

@@ -3,13 +3,13 @@ import gym
 import numpy as np
 import operator
 
-NUM_ORIENTATIONS = 4
-
 
 class Realm(gym.Env):
 
     Y = 0
     X = 1
+
+    NUM_ORIENTATIONS = 4
 
     NORTH = 0
     EAST  = 1
@@ -38,17 +38,41 @@ class Realm(gym.Env):
         },
     }
 
-    def __init__(self, num_agents=1, max_time_steps=64, grid_shape=(7, 7)):
+    def __init__(
+            self,
+            marred=False,
+            num_agents=1,
+            grid_length=8,
+            episode_length=64,
+            seed=None,
+    ):
         # Define your environment variables here
 
+        self.float_dtype = np.float32
+        self.int_dtype = np.int32
+
+        # Square 2D grid
+        assert grid_length > 0
+        self.grid_length = grid_length
+
         # Ensure that there are enough grid cells for all agents and the goal
-        assert num_agents < functools.reduce(operator.mul, grid_shape)
+        assert num_agents < functools.reduce(operator.mul, (self.grid_length, self.grid_length))
 
-        self.grid = np.zeros(grid_shape, dtype=np.int8)
+        self.grid = np.zeros((self.grid_length, self.grid_length), dtype=self.int_dtype)
 
-        self.max_time_steps = max_time_steps
+        # Seeding
+        self.np_random = np.random
+        if seed is not None:
+            self._seed(seed)
+
+        assert episode_length > 0
+        self.episode_length = episode_length
 
         self.num_agents = num_agents
+
+        # These will be set during reset (see below)
+        self.time_step = None
+        self.global_state = None
 
         # Defining observation and action spaces
         self.observation_space = None  # Note: this will be set via the env_wrapper
@@ -57,10 +81,29 @@ class Realm(gym.Env):
                 tuple([len(action) for action in Realm.actions.values()])
             ) for i in range(self.num_agents)
         }
+
+        self.marred = marred
+    
+    @property
+    def observations(self):
+        return None
+
+    @property
+    def rewards(self):
+        return None
+    
+    def _seed(self, seed=None):
+        """
+        Seeding the environment with a desired seed
+        Note: this uses the code in
+        https://github.com/openai/gym/blob/master/gym/utils/seeding.py
+        """
+        self.np_random.seed(seed)
+        return [seed]
     
     def _get_unoccupied_location(self, locations):
         while True:
-            location = [np.random.randint(shape) for shape in self.grid.shape]
+            location = [np.random.randint(shape, dtype=self.int_dtype) for shape in self.grid.shape]
             if location not in locations:
                 return location
     
@@ -72,24 +115,28 @@ class Realm(gym.Env):
         self.grid.fill(0)
 
         self.agent_locations = []
-        for i in range(self.num_agents):
+        for _ in range(self.num_agents):
             location = self._get_unoccupied_location(self.agent_locations)
             self.agent_locations.append(location)
         
         self.goal_location = self._get_unoccupied_location(self.agent_locations)
         
-        self.agent_locations    = np.array(self.agent_locations)
-        self.agent_orientations = np.random.randint(NUM_ORIENTATIONS, size=self.num_agents)
+        self.agent_locations    = np.array(self.agent_locations, dtype=self.int_dtype)
+        self.agent_orientations = np.random.randint(Realm.NUM_ORIENTATIONS, size=self.num_agents, dtype=self.int_dtype)
 
-        self.grid[self.agent_locations[:, Realm.Y], self.agent_locations[:, Realm.X]] = 1
+        self.grid[self.agent_locations[:, Realm.Y], self.agent_locations[:, Realm.X]] = np.arange(self.num_agents, dtype=self.int_dtype) + 2
 
-        self.goal_reached = False
+        self.goal_reached = np.array([False]*self.num_agents, dtype=self.int_dtype)
 
         self.time_step = 0
+
+        self.global_state = {}
 
         self.last_move_legal = [True]*self.num_agents
 
         self.first_action = [True]*self.num_agents
+
+        return self.observations
 
     def step(self, actions=None):
         # Perform one step in the environment
@@ -108,7 +155,7 @@ class Realm(gym.Env):
                     self.last_move_legal[i] = True
                     self.first_action[i] = False
             
-            self.agent_orientations[i] %= NUM_ORIENTATIONS
+            self.agent_orientations[i] %= Realm.NUM_ORIENTATIONS
             
             match action[Realm.MOVE]:
                 case Realm.FORWARD:
@@ -127,24 +174,24 @@ class Realm(gym.Env):
                             new_location[Realm.X] -= 1
                             self.first_action[i] = False
                     
-                    new_location = np.clip(new_location, 0, np.array(self.grid.shape) - 1)
+                    new_location = np.clip(new_location, 0, np.array(self.grid.shape) - 1, dtype=self.int_dtype)
 
                     if new_location[Realm.Y] == self.goal_location[Realm.Y] and new_location[Realm.X] == self.goal_location[Realm.X]:
-                        self.goal_reached = True
+                        self.goal_reached[i] = True
                     elif not self._occupied(new_location):
                         self.grid[self.agent_locations[i][Realm.Y], self.agent_locations[i][Realm.X]] = 0
-                        self.grid[new_location[Realm.Y], new_location[Realm.X]] = 1
+                        self.grid[new_location[Realm.Y], new_location[Realm.X]] = i + 2
                         self.agent_locations[i] = new_location
                         self.last_move_legal[i] = True
                     else:    
                         self.last_move_legal[i] = False
 
-        self.time_step += 1
-
-        obss = None
-        rewards = None
-        done = self.goal_reached or self.max_time_steps <= self.time_step
+        obss = self.observations
+        rewards = self.rewards
+        done = any(self.goal_reached) or self.episode_length <= self.time_step
         info = None
+
+        self.time_step += 1
 
         return obss, rewards, done, info
 
