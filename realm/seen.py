@@ -1,6 +1,6 @@
 import pygame as pg
 
-from blessed_realm import BlessedRealm as Realm
+from .blessed_realm import BlessedRealm as Realm
 
 SCREEN_WIDTH  = 640
 SCREEN_HEIGHT = 480

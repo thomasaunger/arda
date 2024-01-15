@@ -1,9 +1,10 @@
 import numpy as np
 
-from realm import Realm
 from warp_drive.utils.constants import Constants
 from warp_drive.utils.data_feed import DataFeed
 from warp_drive.utils.gpu_environment_context import CUDAEnvironmentContext
+
+from .realm import Realm
 
 _OBSERVATIONS = Constants.OBSERVATIONS
 _ACTIONS = Constants.ACTIONS

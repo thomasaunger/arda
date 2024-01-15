@@ -2,7 +2,7 @@ import pygame as pg
 import numpy as np
 import time
 
-from seen import Seen as Realm
+from realm import Seen as Realm
 
 PLAYER_A = 0
 PLAYER_B = 1
