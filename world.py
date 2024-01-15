@@ -70,11 +70,11 @@ while running:
     if action:
         t_press = time.time()
         _, rewards, done, _ = world.step(actions)
-        if done:
-            world.reset()
-        print(f"{world.time_step:>{len_str_episode_length}}:\n"
+        print(f"{world.time_step - 1:>{len_str_episode_length}}:\n"
               f"  actions: {buttons}\n"
               f"  rewards: {rewards}")
+        if done:
+            world.reset()
 
     # Render the game
     world.render()
