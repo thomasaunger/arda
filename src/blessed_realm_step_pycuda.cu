@@ -79,6 +79,7 @@ extern "C" {
     int * loc_x_arr,
     int * loc_y_arr,
     int * orientation_arr,
+    int * agent_types_arr,
     float * obs_arr,
     int * action_indices_arr,
     float * rewards_arr,
