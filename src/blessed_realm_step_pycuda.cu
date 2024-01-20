@@ -1,5 +1,3 @@
-#include "../../warp-drive/warp_drive/cuda_includes/core/random.h"
-
 __constant__ float kPi = 3.141592654;
 __constant__ float kTwoPi = 6.283185308;
 __constant__ float kEpsilon = 1.0e-10;  // to prevent indeterminate cases
