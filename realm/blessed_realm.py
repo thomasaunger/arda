@@ -39,7 +39,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         grid = self.grid.copy()
 
         # add goal location to the grid
-        grid[self.goal_location[Realm.Y], self.goal_location[Realm.X]] = 1
+        grid[self.goal_location[Realm.COORDINATE_Y], self.goal_location[Realm.COORDINATE_X]] = 1
 
         for agent_id in range(self.num_agents):
             obss[agent_id] = np.concatenate(
@@ -74,11 +74,11 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         )
         data_dict.add_data(
             name=_LOC_Y,
-            data=self.agent_locations[:, Realm.Y],
+            data=self.agent_locations[:, Realm.COORDINATE_Y],
         )
         data_dict.add_data(
             name=_LOC_X,
-            data=self.agent_locations[:, Realm.X],
+            data=self.agent_locations[:, Realm.COORDINATE_X],
         )
         data_dict.add_data(
             name=_ORIENTATIONS,
@@ -124,6 +124,4 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
 
             return None
         else:
-            obss, rewards, done, info = super().step(actions)
-
-            return obss, rewards, done, info
+            return super().step(actions)

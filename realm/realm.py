@@ -6,8 +6,8 @@ import operator
 
 class Realm(gym.Env):
 
-    Y = 0
-    X = 1
+    COORDINATE_Y = 0
+    COORDINATE_X = 1
 
     NUM_ORIENTATIONS = 4
 
@@ -146,7 +146,7 @@ class Realm(gym.Env):
         self.agent_locations    = np.array(self.agent_locations, dtype=self.int_dtype)
         self.agent_orientations = np.random.randint(Realm.NUM_ORIENTATIONS, size=self.num_agents, dtype=self.int_dtype)
 
-        self.grid[self.agent_locations[:, Realm.Y], self.agent_locations[:, Realm.X]] = np.arange(self.num_agents, dtype=self.int_dtype) + 2
+        self.grid[self.agent_locations[:, Realm.COORDINATE_Y], self.agent_locations[:, Realm.COORDINATE_X]] = np.arange(self.num_agents, dtype=self.int_dtype) + 2
 
         self.goal_reached = np.array([False]*self.num_agents, dtype=self.int_dtype)
 
@@ -184,25 +184,25 @@ class Realm(gym.Env):
                     new_location = self.agent_locations[agent_id].copy()
                     match self.agent_orientations[agent_id]:
                         case Realm.NORTH:
-                            new_location[Realm.Y] -= 1
+                            new_location[Realm.COORDINATE_Y] -= 1
                             self.first_action[agent_id] = False
                         case Realm.EAST:
-                            new_location[Realm.X] += 1
+                            new_location[Realm.COORDINATE_X] += 1
                             self.first_action[agent_id] = False
                         case Realm.SOUTH:
-                            new_location[Realm.Y] += 1
+                            new_location[Realm.COORDINATE_Y] += 1
                             self.first_action[agent_id] = False
                         case Realm.WEST:
-                            new_location[Realm.X] -= 1
+                            new_location[Realm.COORDINATE_X] -= 1
                             self.first_action[agent_id] = False
                     
                     new_location = np.clip(new_location, 0, np.array(self.grid.shape) - 1, dtype=self.int_dtype)
 
-                    if new_location[Realm.Y] == self.goal_location[Realm.Y] and new_location[Realm.X] == self.goal_location[Realm.X]:
+                    if new_location[Realm.COORDINATE_Y] == self.goal_location[Realm.COORDINATE_Y] and new_location[Realm.COORDINATE_X] == self.goal_location[Realm.COORDINATE_X]:
                         self.goal_reached[agent_id] = True
                     elif not self._occupied(new_location):
-                        self.grid[self.agent_locations[agent_id][Realm.Y], self.agent_locations[agent_id][Realm.X]] = 0
-                        self.grid[new_location[Realm.Y], new_location[Realm.X]] = agent_id + 2
+                        self.grid[self.agent_locations[agent_id][Realm.COORDINATE_Y], self.agent_locations[agent_id][Realm.COORDINATE_X]] = 0
+                        self.grid[new_location[Realm.COORDINATE_Y], new_location[Realm.COORDINATE_X]] = agent_id + 2
                         self.agent_locations[agent_id] = new_location
                         self.last_move_legal[agent_id] = True
                     else:    
