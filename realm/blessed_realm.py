@@ -41,12 +41,12 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         # add goal location to the grid
         grid[self.goal_location[Realm.Y], self.goal_location[Realm.X]] = 1
 
-        for i in range(self.num_agents):
-            obss[i] = np.concatenate(
+        for agent_id in range(self.num_agents):
+            obss[agent_id] = np.concatenate(
                 [
-                    np.array([i + 2], dtype=self.int_dtype),
-                    np.rot90(grid, k=self.agent_orientations[i]).reshape(-1),
-                    (self.agent_orientations - self.agent_orientations[i]) % Realm.NUM_ORIENTATIONS,
+                    np.array([agent_id + 2], dtype=self.int_dtype),
+                    np.rot90(grid, k=self.agent_orientations[agent_id]).reshape(-1),
+                    (self.agent_orientations - self.agent_orientations[agent_id]) % Realm.NUM_ORIENTATIONS,
                 ], dtype=self.int_dtype
             )
 
@@ -84,6 +84,10 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
             name=_ORIENTATIONS,
             data=self.agent_orientations,
         )
+        data_dict.add_data(
+            name="agent_types",
+            data=[self.agent_types[agent_id] for agent_id in range(self.num_agents)],
+        )
         return data_dict
     
     def step(self, actions=None):
@@ -99,6 +103,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
                 _LOC_Y,
                 _LOC_X,
                 _ORIENTATIONS,
+                "agent_types",
                 _OBSERVATIONS,
                 _ACTIONS,
                 _REWARDS,

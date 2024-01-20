@@ -19,17 +19,17 @@ class Seen(Realm):
         
         pg.display.set_caption("Realm")
 
-    def _agent_image(self, i, margin):
+    def _agent_image(self, agent_id, margin):
         y_width = 32
         x_width = 32
 
         y_offset = (self.screen.get_height() - self.grid.shape[Realm.Y]*y_width) // 2
         x_offset = (self.screen.get_width()  - self.grid.shape[Realm.X]*x_width) // 2
 
-        y = self.agent_locations[i][Realm.Y]
-        x = self.agent_locations[i][Realm.X]
+        y = self.agent_locations[agent_id][Realm.Y]
+        x = self.agent_locations[agent_id][Realm.X]
 
-        match self.agent_orientations[i]:
+        match self.agent_orientations[agent_id]:
             case Realm.NORTH:
                 return [
                     (x_offset +  x     *x_width + margin,       y_offset + (y + 1)*y_width - margin),
@@ -68,17 +68,17 @@ class Seen(Realm):
         x_offset = (self.screen.get_width()  - self.grid.shape[Realm.X]*x_width) // 2
 
         # Draw the agents
-        for i in range(self.num_agents):
-            if i == 0:
+        for agent_id in range(self.num_agents):
+            if self.agent_types[agent_id] == Realm.ANGEL:
                 color = (255, 0, 0)
             else:
                 color = (0, 0, 255)
-            y = y_offset + self.agent_locations[i][Realm.Y]*y_width
-            x = x_offset + self.agent_locations[i][Realm.X]*x_width
+            y = y_offset + self.agent_locations[agent_id][Realm.Y]*y_width
+            x = x_offset + self.agent_locations[agent_id][Realm.X]*x_width
             pg.draw.polygon(
                 self.screen,
                 color,
-                self._agent_image(i, margin),
+                self._agent_image(agent_id, margin),
             )
         
         # Draw the goal as a square
