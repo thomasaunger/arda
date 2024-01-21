@@ -74,11 +74,11 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         )
         data_dict.add_data(
             name=_LOC_Y,
-            data=self.agent_locations[:, Realm.COORDINATE_Y],
+            data=np.ascontiguousarray(self.agent_locations[:, Realm.COORDINATE_Y]),
         )
         data_dict.add_data(
             name=_LOC_X,
-            data=self.agent_locations[:, Realm.COORDINATE_X],
+            data=np.ascontiguousarray(self.agent_locations[:, Realm.COORDINATE_X]),
         )
         data_dict.add_data(
             name=_ORIENTATIONS,
@@ -86,7 +86,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         )
         data_dict.add_data(
             name="agent_types",
-            data=[self.agent_types[agent_id] for agent_id in range(self.num_agents)],
+            data=np.array([self.agent_types[agent_id] for agent_id in range(self.num_agents)], dtype=self.int_dtype),
         )
         return data_dict
     
