@@ -26,20 +26,13 @@ extern "C" {
       for (int other_agent_id = 0; other_agent_id < kNumAgents;
       other_agent_id++) {
         if (other_agent_id != kThisAgentId) {
-          obs_arr[kThisAgentIdxOffset + 0 * (kNumAgents - 1) + index]
-            = 0.0;
-          obs_arr[kThisAgentIdxOffset + 1 * (kNumAgents - 1) + index]
-            = 0.0;
-          obs_arr[kThisAgentIdxOffset + 2 * (kNumAgents - 1) + index]
-            = 0.0;
-          obs_arr[kThisAgentIdxOffset + 3 * (kNumAgents - 1) + index]
-            = 0.0;
-          obs_arr[kThisAgentIdxOffset + 4 * (kNumAgents - 1) + index]
-            = 0.0;
-          obs_arr[kThisAgentIdxOffset + 5 * (kNumAgents - 1) + index]
-            = 0.0;
-          obs_arr[kThisAgentIdxOffset + 6 * (kNumAgents - 1) + index]
-            = 0.0;
+          obs_arr[kThisAgentIdxOffset + 0 * (kNumAgents - 1) + index] = 0.0;
+          obs_arr[kThisAgentIdxOffset + 1 * (kNumAgents - 1) + index] = 0.0;
+          obs_arr[kThisAgentIdxOffset + 2 * (kNumAgents - 1) + index] = 0.0;
+          obs_arr[kThisAgentIdxOffset + 3 * (kNumAgents - 1) + index] = 0.0;
+          obs_arr[kThisAgentIdxOffset + 4 * (kNumAgents - 1) + index] = 0.0;
+          obs_arr[kThisAgentIdxOffset + 5 * (kNumAgents - 1) + index] = 0.0;
+          obs_arr[kThisAgentIdxOffset + 6 * (kNumAgents - 1) + index] = 0.0;
           index += 1;
         }
       }
@@ -60,7 +53,7 @@ extern "C" {
   ) {
     if (kThisAgentId < kNumAgents) {
       // initialize rewards
-      rewards_arr[kThisAgentArrayIdx] = 0.0; 
+      rewards_arr[kThisAgentArrayIdx] = 0.0;
 
       // Wait here to update the number of runners before determining done_arr
       __sync_env_threads();
