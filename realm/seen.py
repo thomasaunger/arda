@@ -54,7 +54,7 @@ class Seen(Realm):
                 return [
                     (x_offset + (x + 1)*CELL_LENGTH_X - MARGIN, y_offset + (y + 1)*CELL_LENGTH_Y - MARGIN),
                     (x_offset + (x + 1)*CELL_LENGTH_X - MARGIN, y_offset +  y     *CELL_LENGTH_Y + MARGIN),
-                    (x_offset +  x     *CELL_LENGTH_X + MARGIN, y_offset + (y + 1)*CELL_LENGTH_Y - CELL_LENGTH_Y//2),
+                    (x_offset +  x     *CELL_LENGTH_X + MARGIN, y_offset +  y     *CELL_LENGTH_Y + CELL_LENGTH_Y//2),
                 ]
 
     def render(self, mode="men"):
