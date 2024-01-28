@@ -44,10 +44,10 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         for agent_id in range(self.num_agents):
             obss[agent_id] = np.concatenate(
                 [
-                    np.array([agent_id + 2], dtype=self.int_dtype),
+                    np.array([agent_id + 2], dtype=self.float_dtype),
                     np.rot90(grid, k=self.agent_orientations[agent_id]).reshape(-1),
                     (self.agent_orientations - self.agent_orientations[agent_id]) % Realm.NUM_ORIENTATIONS,
-                ], dtype=self.int_dtype
+                ], dtype=self.float_dtype
             )
 
         return obss
