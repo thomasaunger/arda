@@ -88,6 +88,10 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
             name="agent_types",
             data=np.array([self.agent_types[agent_id] for agent_id in range(self.num_agents)], dtype=self.int_dtype),
         )
+        data_dict.add_data(
+            name="goal_location",
+            data=self.goal_location,
+        )
         return data_dict
     
     def step(self, actions=None):
@@ -104,6 +108,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
                 _LOC_X,
                 _ORIENTATIONS,
                 "agent_types",
+                "goal_location",
                 _OBSERVATIONS,
                 _ACTIONS,
                 _REWARDS,
