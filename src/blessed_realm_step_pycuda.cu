@@ -92,6 +92,10 @@ extern "C" {
       env_timestep_arr[kEnvId] += 1;
     }
 
+    loc_y_arr[kThisAgentArrayIdx] = kThisAgentId;
+    loc_x_arr[kThisAgentArrayIdx] = kThisAgentId;
+    orientation_arr[kThisAgentArrayIdx] = kThisAgentId;
+
     // Generate a random float between 0 and 1.
     curandState_t* state = states[kThisAgentArrayIdx];  // Retrieve the state for this thread/agent.
     float randomValue = curand_uniform(state);  // Generate the random float.
