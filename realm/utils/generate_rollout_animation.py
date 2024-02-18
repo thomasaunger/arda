@@ -19,7 +19,7 @@ def generate_tag_env_rollout_animation(
         assert trainer is not None
 
         episode_states = trainer.fetch_episode_states(
-            ["loc_x", "loc_y", "orientations", "goal_location"]
+            ["loc_y", "loc_x", "orientations", "goal_location", "rewards"]
         )
         assert isinstance(episode_states, dict)
         env = trainer.cuda_envs.env
@@ -32,8 +32,8 @@ def generate_tag_env_rollout_animation(
         num_agents = 2
         episode_length = 64
         episode_states = {
-            "loc_x":         np.random.randint(grid_length, size=(episode_length, num_agents)),
             "loc_y":         np.random.randint(grid_length, size=(episode_length, num_agents)),
+            "loc_x":         np.random.randint(grid_length, size=(episode_length, num_agents)),
             "orientations":  np.random.randint(          4, size=(episode_length, num_agents)),
             "goal_location": np.random.randint(grid_length, size=(episode_length,          2)),
         }
@@ -128,8 +128,8 @@ def generate_tag_env_rollout_animation(
 
     def animate(i):
         for idx, triangle in enumerate(triangles):
-            x = episode_states["loc_x"][i, idx]
             y = episode_states["loc_y"][i, idx]
+            x = episode_states["loc_x"][i, idx]
             orientation = episode_states["orientations"][i, idx]
 
             vertices = state_to_vertices(y, x, orientation)
