@@ -134,7 +134,5 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
                 )
 
             self.time_step += 1
-
-            return None
         else:
             return super().step(actions)
