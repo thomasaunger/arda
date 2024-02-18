@@ -1,47 +1,104 @@
-__constant__ float kPi = 3.141592654;
-__constant__ float kTwoPi = 6.283185308;
-__constant__ float kEpsilon = 1.0e-10;  // to prevent indeterminate cases
+__constant__ int NUM_COORDINATES = 2;
+
+__constant__ int NUM_ORIENTATIONS = 4;
+
+__constant__ int NORTH = 0;
+__constant__ int EAST  = 1;
+__constant__ int SOUTH = 2;
+__constant__ int WEST  = 3;
+
+__constant__ int LEFT  = 1;
+__constant__ int RIGHT = 2;
+
+__constant__ int FORWARD = 1;
 
 extern "C" {
-  // Device helper function to generate observation
-  __device__ void CudaBlessedRealmGenerateObservation(
-    float * obs_arr,
-    int * env_timestep_arr,
-    const int kNumAgents,
-    const int kEpisodeLength,
-    const int kEnvId,
-    const int kThisAgentId,
-    const int kThisAgentArrayIdx
+  // Device helper function to rotate coordinates
+  __device__ void RotateCoordinates(
+    int kGridLength,
+    int * loc_y,
+    int * loc_x,
+    int orientation
   ) {
-    int num_features = 7;
+    int loc_y_tmp = *loc_y;
+    int loc_x_tmp = *loc_x;
+    if (orientation == NORTH) {
+      *loc_y = loc_y_tmp;
+      *loc_x = loc_x_tmp;
+    } else if (orientation == EAST) {
+      *loc_y = kGridLength - 1 - loc_x_tmp;
+      *loc_x = loc_y_tmp;
+    } else if (orientation == SOUTH) {
+      *loc_y = kGridLength - 1 - loc_y_tmp;
+      *loc_x = kGridLength - 1 - loc_x_tmp;
+    } else if (orientation == WEST) {
+      *loc_y = loc_x_tmp;
+      *loc_x = kGridLength - 1 - loc_y_tmp;
+    }
+  }
 
-    if (kThisAgentId < kNumAgents) {
-      // obs shape is (num_envs, kNumAgents,
-      // num_features * (kNumAgents - 1) + 1)
-      const int kThisAgentIdxOffset = kEnvId * kNumAgents *
-        (num_features * (kNumAgents - 1) + 1) +
-        kThisAgentId * (num_features * (kNumAgents - 1) + 1);
-      // Initialize obs
-      int index = 0;
-      for (int other_agent_id = 0; other_agent_id < kNumAgents;
-      other_agent_id++) {
-        if (other_agent_id != kThisAgentId) {
-          obs_arr[kThisAgentIdxOffset + 0 * (kNumAgents - 1) + index] = 0.0;
-          obs_arr[kThisAgentIdxOffset + 1 * (kNumAgents - 1) + index] = 0.0;
-          obs_arr[kThisAgentIdxOffset + 2 * (kNumAgents - 1) + index] = 0.0;
-          obs_arr[kThisAgentIdxOffset + 3 * (kNumAgents - 1) + index] = 0.0;
-          obs_arr[kThisAgentIdxOffset + 4 * (kNumAgents - 1) + index] = 0.0;
-          obs_arr[kThisAgentIdxOffset + 5 * (kNumAgents - 1) + index] = 0.0;
-          obs_arr[kThisAgentIdxOffset + 6 * (kNumAgents - 1) + index] = 0.0;
-          index += 1;
+  // Device helper function to check whether a location is within bounds
+  __device__ bool LocationIsWithinBounds(
+    int kGridLength,
+    int loc_y,
+    int loc_x
+  ) {
+    return (0 <= loc_y && loc_y < kGridLength && 0 <= loc_x && loc_x < kGridLength);
+  }
+
+  // Device helper function to check whether a location is occupied
+  __device__ bool LocationIsOccupied(
+    int * loc_y_arr,
+    int * loc_x_arr,
+    int kNumAgents,
+    int kEnvId,
+    int kThisAgentId,
+    int loc_y,
+    int loc_x
+  ) {
+    for (int kAgentId = 0; kAgentId < kNumAgents; kAgentId++) {
+      if (kAgentId != kThisAgentId) {
+        int kAgentIdx = kEnvId * kNumAgents + kAgentId;
+        if (loc_y_arr[kAgentIdx] == loc_y && loc_x_arr[kAgentIdx] == loc_x) {
+          return true;
         }
       }
-      obs_arr[kThisAgentIdxOffset + num_features * (kNumAgents - 1)] = 0.0;
     }
+    return false;
+  }
+
+  // Device helper function to generate an unoccupied location
+  __device__ void GenerateUnoccupiedLocation(
+    int kGridLength,
+    int * loc_y_arr,
+    int * loc_x_arr,
+    int kNumAgents,
+    int kEnvId,
+    int * loc_y,
+    int * loc_x
+  ) {
+    // Use last agent's state to generate a random location
+    curandState_t* state = states[kEnvId * kNumAgents + kNumAgents - 1];
+    do {
+      // Generate random coordinates from uniform distribution over [0, kGridLength - 1]
+      *loc_y = kGridLength * (1.0 - curand_uniform(state));
+      *loc_x = kGridLength * (1.0 - curand_uniform(state));
+    } while (LocationIsOccupied(
+      loc_y_arr,
+      loc_x_arr,
+      kNumAgents,
+      kEnvId,
+      -1,
+      *loc_y,
+      *loc_x
+    ));
   }
 
   // Device helper function to compute rewards
   __device__ void CudaBlessedRealmComputeReward(
+    int * loc_y_arr,
+    int * loc_x_arr,
+    int * goal_location_arr,
     float * rewards_arr,
     int * done_arr,
     int * env_timestep_arr,
@@ -52,16 +109,116 @@ extern "C" {
     const int kThisAgentArrayIdx
   ) {
     if (kThisAgentId < kNumAgents) {
-      // initialize rewards
+      // Initialize rewards
       rewards_arr[kThisAgentArrayIdx] = 0.0;
 
-      // Wait here to update the number of runners before determining done_arr
-      __sync_env_threads();
-      // Use only agent 0's thread to set done_arr
-      if (kThisAgentId == 0) {
-        if (env_timestep_arr[kEnvId] == kEpisodeLength) {
+      // Check whether the agent has reached the goal
+      if (loc_y_arr[kThisAgentArrayIdx] == goal_location_arr[kEnvId * NUM_COORDINATES    ] &&
+          loc_x_arr[kThisAgentArrayIdx] == goal_location_arr[kEnvId * NUM_COORDINATES + 1]) {
+        rewards_arr[kThisAgentArrayIdx] = 20.0 * (1.0 - env_timestep_arr[kEnvId] / kEpisodeLength);
+        // done_arr[kEnvId] = 1;
+      }
+
+      // Use only last agent's thread to check whether the maximum number of timesteps has been reached
+      if (kThisAgentId == kNumAgents - 1) {
+        if (env_timestep_arr[kEnvId] == kEpisodeLength - 1) {
             done_arr[kEnvId] = 1;
         }
+      }
+    }
+  }
+
+  // Device helper function to generate observation
+  __device__ void CudaBlessedRealmGenerateObservation(
+    int kGridLength,
+    int * loc_y_arr,
+    int * loc_x_arr,
+    int * orientation_arr,
+    int * goal_location_arr,
+    float * obs_arr,
+    int * done_arr,
+    int * env_timestep_arr,
+    const int kNumAgents,
+    const int kEpisodeLength,
+    const int kEnvId,
+    const int kThisAgentId,
+    const int kThisAgentArrayIdx
+  ) {
+    if (kThisAgentId < kNumAgents) {
+      // obs shape is (num_envs, kNumAgents, 1 + kGridLength * kGridLength + kNumAgents)
+      const int kThisAgentIdxOffset = kEnvId * kNumAgents * (1 + kGridLength * kGridLength + kNumAgents);
+      
+      // Initialize obs
+      for (int kLocationIdx = 0; kLocationIdx < kGridLength * kGridLength; kLocationIdx++) {
+        obs_arr[kThisAgentIdxOffset + 1 + kLocationIdx] = 0.0;
+      }
+
+      int kAgentIdx;
+      int loc_y;
+      int loc_x;
+      if (done_arr[kEnvId]) {
+        // Reinitialize agent locations
+        for (int kAgentId = 0; kAgentId < kNumAgents; kAgentId++) {
+          kAgentIdx = kEnvId * kNumAgents + kAgentId;
+          loc_y_arr[kAgentIdx] = -1;
+          loc_x_arr[kAgentIdx] = -1;
+        }
+
+        // Reset agent locations
+        for (int kAgentId = 0; kAgentId < kNumAgents; kAgentId++) {
+          kAgentIdx = kEnvId * kNumAgents + kAgentId;
+          GenerateUnoccupiedLocation(
+            kGridLength,
+            loc_y_arr,
+            loc_x_arr,
+            kNumAgents,
+            kEnvId,
+            &loc_y,
+            &loc_x
+          );
+          loc_y_arr[kAgentIdx] = loc_y;
+          loc_x_arr[kAgentIdx] = loc_x;
+        }
+
+        // Reset goal location
+        GenerateUnoccupiedLocation(
+          kGridLength,
+          loc_y_arr,
+          loc_x_arr,
+          kNumAgents,
+          kEnvId,
+          &loc_y,
+          &loc_x
+        );
+        goal_location_arr[kEnvId * NUM_COORDINATES    ] = loc_y;
+        goal_location_arr[kEnvId * NUM_COORDINATES + 1] = loc_x;
+
+        // Reset agent orientations
+        for (int kAgentId = 0; kAgentId < kNumAgents; kAgentId++) {
+          kAgentIdx = kEnvId * kNumAgents + kAgentId;
+          // Use agent's state to generate a random orientation
+          curandState_t* state = states[kAgentIdx];
+          // Generate a random orientation from uniform distribution over [0, NUM_ORIENTATIONS - 1]
+          orientation_arr[kAgentIdx] = NUM_ORIENTATIONS * (1.0 - curand_uniform(state));;
+        }
+      }
+
+      loc_y = goal_location_arr[kEnvId * NUM_COORDINATES    ];
+      loc_x = goal_location_arr[kEnvId * NUM_COORDINATES + 1];
+      RotateCoordinates(kGridLength, &loc_y, &loc_x, orientation_arr[kThisAgentArrayIdx]);
+      obs_arr[kThisAgentIdxOffset + 1 + loc_y * kGridLength + loc_x] = 1;
+
+      for (int kAgentId = 0; kAgentId < kNumAgents; kAgentId++) {
+        kAgentIdx = kEnvId * kNumAgents + kAgentId;
+
+        // Add agent location
+        loc_y = loc_y_arr[kAgentIdx];
+        loc_x = loc_x_arr[kAgentIdx];
+        RotateCoordinates(kGridLength, &loc_y, &loc_x, orientation_arr[kThisAgentArrayIdx]);
+        obs_arr[kThisAgentIdxOffset + 1 + loc_y * kGridLength + loc_x] = kAgentIdx + 2;
+
+        // Set agent orientation
+        obs_arr[kThisAgentIdxOffset + 1 + kGridLength * kGridLength + kAgentId] = (orientation_arr[kAgentIdx] + NUM_ORIENTATIONS - orientation_arr[kThisAgentArrayIdx]) % NUM_ORIENTATIONS;
       }
     }
   }
@@ -69,8 +226,8 @@ extern "C" {
   __global__ void CudaBlessedRealmStep(
     const bool kMarred,
     int kGridLength,
-    int * loc_x_arr,
     int * loc_y_arr,
+    int * loc_x_arr,
     int * orientation_arr,
     int * agent_types_arr,
     int * goal_location_arr,
@@ -86,44 +243,62 @@ extern "C" {
     const int kThisAgentId = getAgentID(threadIdx.x, blockIdx.x, blockDim.x);
     const int kThisAgentArrayIdx = kEnvId * kNumAgents + kThisAgentId;
     const int kNumActions = 2;
+    const int kThisAgentActionIdxOffset = kEnvId * kNumAgents * kNumActions + kThisAgentId * kNumActions;
 
-    // Increment time ONCE -- only 1 thread can do this.
-    if (kThisAgentId == 0) {
-      env_timestep_arr[kEnvId] += 1;
+    int action_turn = action_indices_arr[kThisAgentActionIdxOffset    ];
+    int action_move = action_indices_arr[kThisAgentActionIdxOffset + 1];
+
+    int loc_y_tmp = loc_y_arr[kThisAgentArrayIdx];
+    int loc_x_tmp = loc_x_arr[kThisAgentArrayIdx];
+
+    if (action_move == FORWARD) {
+      if        (orientation_arr[kThisAgentArrayIdx] == NORTH) {
+        loc_y_tmp -= 1;
+      } else if (orientation_arr[kThisAgentArrayIdx] == EAST ) {
+        loc_x_tmp += 1;
+      } else if (orientation_arr[kThisAgentArrayIdx] == SOUTH) {
+        loc_y_tmp += 1;
+      } else if (orientation_arr[kThisAgentArrayIdx] == WEST ) {
+        loc_x_tmp -= 1;
+      }
+    } else if (action_turn == LEFT) {
+      orientation_arr[kThisAgentArrayIdx] = (orientation_arr[kThisAgentArrayIdx] + NUM_ORIENTATIONS - 1) % NUM_ORIENTATIONS;
+    } else if (action_turn == RIGHT) {
+      orientation_arr[kThisAgentArrayIdx] = (orientation_arr[kThisAgentArrayIdx] +                    1) % NUM_ORIENTATIONS;
     }
 
-    loc_y_arr[kThisAgentArrayIdx] = kThisAgentId;
-    loc_x_arr[kThisAgentArrayIdx] = kThisAgentId;
-    orientation_arr[kThisAgentArrayIdx] = kThisAgentId;
+    if (
+      LocationIsWithinBounds(
+        kGridLength,
+        loc_y_tmp,
+        loc_x_tmp
+      ) && !LocationIsOccupied(
+        loc_y_arr,
+        loc_x_arr,
+        kNumAgents,
+        kEnvId,
+        kThisAgentId,
+        loc_y_tmp,
+        loc_x_tmp
+      )
+    ) {
+      // Update the location of the agent
+      loc_y_arr[kThisAgentArrayIdx] = loc_y_tmp;
+      loc_x_arr[kThisAgentArrayIdx] = loc_x_tmp;
+    }
 
-    // Generate a random float between 0 and 1.
-    curandState_t* state = states[kThisAgentArrayIdx];  // Retrieve the state for this thread/agent.
-    float randomValue = curand_uniform(state);  // Generate the random float.
-
-    // Wait here until timestep has been updated
-    __sync_env_threads();
-
-    assert(env_timestep_arr[kEnvId] > 0 && env_timestep_arr[kEnvId] <=
-      kEpisodeLength);
+    // assert(env_timestep_arr[kEnvId] > 0 && env_timestep_arr[kEnvId] <= kEpisodeLength);
 
     // Make sure all agents have updated their states
     __sync_env_threads();
-    // -------------------------------
-    // Generate observation
-    // -------------------------------
-    CudaBlessedRealmGenerateObservation(
-      obs_arr,
-      env_timestep_arr,
-      kNumAgents,
-      kEpisodeLength,
-      kEnvId,
-      kThisAgentId,
-      kThisAgentArrayIdx);
 
     // -------------------------------
     // Compute reward
     // -------------------------------
     CudaBlessedRealmComputeReward(
+      loc_y_arr,
+      loc_x_arr,
+      goal_location_arr,
       rewards_arr,
       done_arr,
       env_timestep_arr,
@@ -131,6 +306,31 @@ extern "C" {
       kEpisodeLength,
       kEnvId,
       kThisAgentId,
-      kThisAgentArrayIdx);
+      kThisAgentArrayIdx
+    );
+
+    // -------------------------------
+    // Generate observation
+    // -------------------------------
+    CudaBlessedRealmGenerateObservation(
+      kGridLength,
+      loc_y_arr,
+      loc_x_arr,
+      orientation_arr,
+      goal_location_arr,
+      obs_arr,
+      done_arr,
+      env_timestep_arr,
+      kNumAgents,
+      kEpisodeLength,
+      kEnvId,
+      kThisAgentId,
+      kThisAgentArrayIdx
+    );
+    
+    // Increment time ONCE -- only 1 thread can do this.
+    if (kThisAgentId == kNumAgents - 1) {
+      env_timestep_arr[kEnvId] += 1;
+    }
   }
 }
