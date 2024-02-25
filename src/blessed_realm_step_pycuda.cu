@@ -146,8 +146,8 @@ extern "C" {
   ) {
     if (kThisAgentId < kNumAgents) {
       // obs shape is (num_envs, kNumAgents, 1 + kGridLength * kGridLength + kNumAgents)
-      const int kThisAgentIdxOffset = kEnvId * kNumAgents * (1 + kGridLength * kGridLength + kNumAgents);
-      
+      const int kThisAgentIdxOffset = (kEnvId * kNumAgents + kThisAgentId) * (1 + kGridLength * kGridLength + kNumAgents);
+
       // Initialize obs
       for (int kLocationIdx = 0; kLocationIdx < kGridLength * kGridLength; kLocationIdx++) {
         obs_arr[kThisAgentIdxOffset + 1 + kLocationIdx] = 0.0;
