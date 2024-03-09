@@ -92,8 +92,6 @@ def generate_tag_env_rollout_animation(
                 return [(x + 1, y    ), (x,     y    ), (x + 0.5, y +   1), (x + 1, y    )]
             case 3:
                 return [(x + 1, y + 1), (x + 1, y    ), (x,       y + 0.5), (x + 1, y + 1)]
-    
-    print(episode_states)
 
     # Create triangles
     triangles = []
