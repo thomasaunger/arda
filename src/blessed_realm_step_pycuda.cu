@@ -115,7 +115,7 @@ extern "C" {
       // Check whether the agent has reached the goal
       if (loc_y_arr[kThisAgentArrayIdx] == goal_location_arr[kEnvId * NUM_COORDINATES    ] &&
           loc_x_arr[kThisAgentArrayIdx] == goal_location_arr[kEnvId * NUM_COORDINATES + 1]) {
-        rewards_arr[kThisAgentArrayIdx] = 1.0 * (1.0 - env_timestep_arr[kEnvId] / kEpisodeLength);
+        rewards_arr[kThisAgentArrayIdx] = 1.0 * (1.0 - env_timestep_arr[kEnvId] / float(kEpisodeLength));
         // done_arr[kEnvId] = 1;
       }
 
@@ -410,7 +410,7 @@ extern "C" {
       kThisAgentId,
       kThisAgentArrayIdx
     );
-    
+
     // Increment time ONCE -- only 1 thread can do this.
     if (kThisAgentId == kNumAgents - 1) {
       env_timestep_arr[kEnvId] += 1;
