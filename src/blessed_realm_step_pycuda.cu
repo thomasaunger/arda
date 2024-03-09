@@ -121,7 +121,7 @@ extern "C" {
 
       // Use only last agent's thread to check whether the maximum number of timesteps has been reached
       if (kThisAgentId == kNumAgents - 1) {
-        if (env_timestep_arr[kEnvId] == kEpisodeLength - 1) {
+        if (env_timestep_arr[kEnvId] == kEpisodeLength) {
             done_arr[kEnvId] = 1;
         }
       }
@@ -370,10 +370,15 @@ extern "C" {
       loc_x_arr[kThisAgentArrayIdx] = loc_x_tmp;
     }
 
-    // assert(env_timestep_arr[kEnvId] > 0 && env_timestep_arr[kEnvId] <= kEpisodeLength);
+    // Wait here until timestep has been updated
+    if (kThisAgentId == 0) {
+      env_timestep_arr[kEnvId] += 1;
+    }
 
     // Make sure all agents have updated their states
     __sync_env_threads();
+
+    assert(0 < env_timestep_arr[kEnvId] && env_timestep_arr[kEnvId] <= kEpisodeLength);
 
     // -------------------------------
     // Compute reward
@@ -410,10 +415,5 @@ extern "C" {
       kThisAgentId,
       kThisAgentArrayIdx
     );
-
-    // Increment time ONCE -- only 1 thread can do this.
-    if (kThisAgentId == kNumAgents - 1) {
-      env_timestep_arr[kEnvId] += 1;
-    }
   }
 }
