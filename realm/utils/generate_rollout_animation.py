@@ -50,13 +50,13 @@ def generate_tag_env_rollout_animation(
     ax.set_zlim(-1.0, 1.0)
 
     # Surface
-    for y in range(grid_length):
-        for x in range(grid_length):
-            corner_points = [(y, x), (y, x + 1), (y + 1, x + 1), (y + 1, x)]
-            color = goal_color if episode_states["goal_location"][0, 0] == y and episode_states["goal_location"][0, 1] == x else (0.1, 0.2, 0.5, 0.15)
+    for x in range(grid_length):
+        for y in range(grid_length):
+            corner_points = [(x, y), (x, y + 1), (x + 1, y + 1), (x + 1, y)]
+            color = goal_color if episode_states["goal_location"][0, 1] == x and episode_states["goal_location"][0, 0] == y else (0.1, 0.2, 0.5, 0.15)
             poly = Polygon(corner_points, color=color)
             ax.add_patch(poly)
-            art3d.pathpatch_2d_to_3d(poly, z=0, zdir="z")
+            art3d.pathpatch_2d_to_3d(poly, z=-0, zdir="z")
 
     # "Hide" side panes
     ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
