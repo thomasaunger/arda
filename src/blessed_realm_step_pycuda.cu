@@ -16,9 +16,9 @@ extern "C" {
   // Device helper function to rotate coordinates
   __device__ void RotateCoordinates(
     int kGridLength,
+    int orientation,
     int * loc_y,
-    int * loc_x,
-    int orientation
+    int * loc_x
   ) {
     int loc_y_tmp = *loc_y;
     int loc_x_tmp = *loc_x;
@@ -26,14 +26,14 @@ extern "C" {
       *loc_y = loc_y_tmp;
       *loc_x = loc_x_tmp;
     } else if (orientation == EAST) {
-      *loc_y = kGridLength - 1 - loc_x_tmp;
-      *loc_x = loc_y_tmp;
+      *loc_y = loc_x_tmp;
+      *loc_x = kGridLength - 1 - loc_y_tmp;
     } else if (orientation == SOUTH) {
       *loc_y = kGridLength - 1 - loc_y_tmp;
       *loc_x = kGridLength - 1 - loc_x_tmp;
     } else if (orientation == WEST) {
-      *loc_y = loc_x_tmp;
-      *loc_x = kGridLength - 1 - loc_y_tmp;
+      *loc_y = kGridLength - 1 - loc_x_tmp;
+      *loc_x = loc_y_tmp;
     }
   }
 
@@ -145,106 +145,12 @@ extern "C" {
     const int kThisAgentArrayIdx
   ) {
     if (kThisAgentId < kNumAgents) {
-      // obs shape is (num_envs, kNumAgents, 1 + kGridLength * kGridLength + kNumAgents)
-      const int kThisAgentIdxOffset = (kEnvId * kNumAgents + kThisAgentId) * (1 + kGridLength * kGridLength + kNumAgents);
+      // obs shape is (num_envs, kNumAgents, n)
+      const int n = 5;
+      const int kThisAgentIdxOffset = (kEnvId * kNumAgents + kThisAgentId) * n;
 
       // Initialize obs
-      for (int kLocationIdx = 0; kLocationIdx < kGridLength * kGridLength; kLocationIdx++) {
-        obs_arr[kThisAgentIdxOffset + 1 + kLocationIdx] = 0.0;
-      }
-
-      int kAgentIdx;
-      int loc_y;
-      int loc_x;
-      if (done_arr[kEnvId]) {
-        // Reinitialize agent locations
-        for (int kAgentId = 0; kAgentId < kNumAgents; kAgentId++) {
-          kAgentIdx = kEnvId * kNumAgents + kAgentId;
-          loc_y_arr[kAgentIdx] = -1;
-          loc_x_arr[kAgentIdx] = -1;
-        }
-
-        // Reset agent locations
-        for (int kAgentId = 0; kAgentId < kNumAgents; kAgentId++) {
-          kAgentIdx = kEnvId * kNumAgents + kAgentId;
-          GenerateUnoccupiedLocation(
-            kGridLength,
-            loc_y_arr,
-            loc_x_arr,
-            kNumAgents,
-            kEnvId,
-            &loc_y,
-            &loc_x
-          );
-          loc_y_arr[kAgentIdx] = loc_y;
-          loc_x_arr[kAgentIdx] = loc_x;
-        }
-
-        // Reset goal location
-        GenerateUnoccupiedLocation(
-          kGridLength,
-          loc_y_arr,
-          loc_x_arr,
-          kNumAgents,
-          kEnvId,
-          &loc_y,
-          &loc_x
-        );
-        goal_location_arr[kEnvId * NUM_COORDINATES    ] = loc_y;
-        goal_location_arr[kEnvId * NUM_COORDINATES + 1] = loc_x;
-
-        // Reset agent orientations
-        for (int kAgentId = 0; kAgentId < kNumAgents; kAgentId++) {
-          kAgentIdx = kEnvId * kNumAgents + kAgentId;
-          // Use agent's state to generate a random orientation
-          curandState_t* state = states[kAgentIdx];
-          // Generate a random orientation from uniform distribution over [0, NUM_ORIENTATIONS - 1]
-          orientation_arr[kAgentIdx] = NUM_ORIENTATIONS * (1.0 - curand_uniform(state));
-        }
-      }
-
-      loc_y = goal_location_arr[kEnvId * NUM_COORDINATES    ];
-      loc_x = goal_location_arr[kEnvId * NUM_COORDINATES + 1];
-      RotateCoordinates(kGridLength, &loc_y, &loc_x, orientation_arr[kThisAgentArrayIdx]);
-      obs_arr[kThisAgentIdxOffset + 1 + loc_y * kGridLength + loc_x] = 1;
-
-      for (int kAgentId = 0; kAgentId < kNumAgents; kAgentId++) {
-        kAgentIdx = kEnvId * kNumAgents + kAgentId;
-
-        // Add agent location
-        loc_y = loc_y_arr[kAgentIdx];
-        loc_x = loc_x_arr[kAgentIdx];
-        RotateCoordinates(kGridLength, &loc_y, &loc_x, orientation_arr[kThisAgentArrayIdx]);
-        obs_arr[kThisAgentIdxOffset + 1 + loc_y * kGridLength + loc_x] = kAgentIdx + 2;
-
-        // Set agent orientation
-        obs_arr[kThisAgentIdxOffset + 1 + kGridLength * kGridLength + kAgentId] = (orientation_arr[kAgentIdx] + NUM_ORIENTATIONS - orientation_arr[kThisAgentArrayIdx]) % NUM_ORIENTATIONS;
-      }
-    }
-  }
-
-  // Device helper function to generate observation
-  __device__ void CudaBlessedRealmGenerateObservation2(
-    int kGridLength,
-    int * loc_y_arr,
-    int * loc_x_arr,
-    int * orientation_arr,
-    int * goal_location_arr,
-    float * obs_arr,
-    int * done_arr,
-    int * env_timestep_arr,
-    const int kNumAgents,
-    const int kEpisodeLength,
-    const int kEnvId,
-    const int kThisAgentId,
-    const int kThisAgentArrayIdx
-  ) {
-    if (kThisAgentId < kNumAgents) {
-      // obs shape is (num_envs, kNumAgents, 5)
-      const int kThisAgentIdxOffset = (kEnvId * kNumAgents + kThisAgentId) * 5;
-
-      // Initialize obs
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < n; i++) {
         obs_arr[kThisAgentIdxOffset + i] = 0.0;
       }
 
@@ -298,11 +204,18 @@ extern "C" {
         }
       }
 
-      obs_arr[kThisAgentIdxOffset    ] = loc_y_arr[kThisAgentArrayIdx];
-      obs_arr[kThisAgentIdxOffset + 1] = loc_x_arr[kThisAgentArrayIdx];
-      obs_arr[kThisAgentIdxOffset + 2] = orientation_arr[kThisAgentArrayIdx];
-      obs_arr[kThisAgentIdxOffset + 3] = goal_location_arr[kEnvId * NUM_COORDINATES    ];
-      obs_arr[kThisAgentIdxOffset + 4] = goal_location_arr[kEnvId * NUM_COORDINATES + 1];
+      loc_y = loc_y_arr[kThisAgentArrayIdx];
+      loc_x = loc_x_arr[kThisAgentArrayIdx];
+      RotateCoordinates(kGridLength, orientation_arr[kThisAgentArrayIdx], &loc_y, &loc_x);
+      obs_arr[kThisAgentIdxOffset    ] = loc_y;
+      obs_arr[kThisAgentIdxOffset + 1] = loc_x;
+
+      loc_y = goal_location_arr[kEnvId * NUM_COORDINATES    ];
+      loc_x = goal_location_arr[kEnvId * NUM_COORDINATES + 1];
+      RotateCoordinates(kGridLength, orientation_arr[kThisAgentArrayIdx], &loc_y, &loc_x);
+      obs_arr[kThisAgentIdxOffset + 2] = loc_y;
+      obs_arr[kThisAgentIdxOffset + 3] = loc_x;
+      obs_arr[kThisAgentIdxOffset + 4] = orientation_arr[kThisAgentArrayIdx];
     }
   }
 
@@ -400,7 +313,7 @@ extern "C" {
     // -------------------------------
     // Generate observation
     // -------------------------------
-    CudaBlessedRealmGenerateObservation2(
+    CudaBlessedRealmGenerateObservation(
       kGridLength,
       loc_y_arr,
       loc_x_arr,
