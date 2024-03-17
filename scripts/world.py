@@ -1,20 +1,58 @@
-import pygame as pg
 import numpy as np
+import os
+import pygame as pg
 import time
+import torch
 
 from realm import Seen as Realm
+
+from torch.distributions.categorical import Categorical
+
+from warp_drive.training.models.fully_connected         import FullyConnected
+from warp_drive.utils.recursive_obs_dict_to_spaces_dict import (
+    recursive_obs_dict_to_spaces_dict,
+)
 
 PLAYER_A = 0
 PLAYER_B = 1
 
 
 # Create an instance of the Seen environment
-world = Realm(num_agents=2)
-world.reset()
+world = Realm(num_agents=2, grid_length=4)
+obs = world.reset()
+world.observation_space = recursive_obs_dict_to_spaces_dict(obs)
 len_str_episode_length = len(str(world.episode_length))
+
+# Summon spirit
+spirit_config = dict(
+    type="fully_connected", fc_dims=[1024, 1024, 1024], spirit_ckpt_filepath=""
+)
+policy = "power"
+policy_tag_to_agent_id_map = {
+    "power": list(world.powers),
+    "angel": list(world.angels),
+}
+spirit = FullyConnected(
+    world,
+    spirit_config,
+    policy,
+    policy_tag_to_agent_id_map
+)
+spirit.load_state_dict(
+    torch.load(
+        os.path.join(
+            "spirits",
+            "power_31916032.state_dict"
+        ),
+        map_location=torch.device("cpu")
+    )
+)
+spirit.eval()
 
 # Initial key presses
 keys = pg.key.get_pressed()
+
+spirit_actions = [torch.tensor(0), torch.tensor(0)]
 
 # Game loop
 t_press = 1000000
@@ -29,6 +67,11 @@ while running:
     prev_keys = keys
     keys = pg.key.get_pressed()
 
+    out = spirit(torch.from_numpy(obs[list(world.powers)[0]]))
+    dists = [Categorical(probs=probs) for probs in out[0]]
+    prev_spirit_actions = spirit_actions
+    spirit_actions = [dist.sample() for dist in dists]
+
     # Default actions
     actions = {agent_id: np.array(
         [
@@ -41,35 +84,35 @@ while running:
 
     action = False
 
-    if keys[pg.K_UP] and (not prev_keys[pg.K_UP] or (time.time() - t_press > t_delta and not world.first_action[PLAYER_A] and world.last_move_legal[PLAYER_A])):
+    if (keys[pg.K_UP] or (PLAYER_A == list(world.powers)[0] and spirit_actions[1].item() == 1)) and (not (prev_keys[pg.K_UP] or (PLAYER_A == list(world.powers)[0] and prev_spirit_actions[1].item() == 1)) or (time.time() - t_press > t_delta and not world.first_action[PLAYER_A] and world.last_move_legal[PLAYER_A])):
         actions[PLAYER_A][world.MOVE] = world.actions[world.MOVE]["FORWARD"]
         action = True
         buttons[PLAYER_A] = "UP"
-    elif keys[pg.K_RIGHT] and (not prev_keys[pg.K_RIGHT] or (time.time() - t_press > t_delta and not world.first_action[PLAYER_A])):
-        actions[PLAYER_A][world.TURN] = world.actions[world.TURN]["RIGHT"]
-        action = True
-        buttons[PLAYER_A] = "RIGHT"
-    elif keys[pg.K_LEFT] and (not prev_keys[pg.K_LEFT] or (time.time() - t_press > t_delta and not world.first_action[PLAYER_A])):
+    elif (keys[pg.K_LEFT] or (PLAYER_A == list(world.powers)[0] and spirit_actions[0].item() == 1)) and (not (prev_keys[pg.K_LEFT] or (PLAYER_A == list(world.powers)[0] and prev_spirit_actions[0].item() == 1)) or (time.time() - t_press > t_delta and not world.first_action[PLAYER_A])):
         actions[PLAYER_A][world.TURN] = world.actions[world.TURN]["LEFT"]
         action = True
         buttons[PLAYER_A] = "LEFT"
+    elif (keys[pg.K_RIGHT] or (PLAYER_A == list(world.powers)[0] and spirit_actions[0].item() == 2)) and (not (prev_keys[pg.K_RIGHT] or (PLAYER_A == list(world.powers)[0] and prev_spirit_actions[0].item() == 2)) or (time.time() - t_press > t_delta and not world.first_action[PLAYER_A])):
+        actions[PLAYER_A][world.TURN] = world.actions[world.TURN]["RIGHT"]
+        action = True
+        buttons[PLAYER_A] = "RIGHT"
     
-    if keys[pg.K_i] and (not prev_keys[pg.K_i] or (time.time() - t_press > t_delta and not world.first_action[PLAYER_B] and world.last_move_legal[PLAYER_B])):
+    if (keys[pg.K_i] or (PLAYER_B == list(world.powers)[0] and spirit_actions[1].item() == 1)) and (not (prev_keys[pg.K_i] or (PLAYER_B == list(world.powers)[0] and prev_spirit_actions[1].item() == 1)) or (time.time() - t_press > t_delta and not world.first_action[PLAYER_B] and world.last_move_legal[PLAYER_B])):
         actions[PLAYER_B][world.MOVE] = world.actions[world.MOVE]["FORWARD"]
         action = True
         buttons[PLAYER_B] = "i"
-    elif keys[pg.K_l] and (not prev_keys[pg.K_l] or (time.time() - t_press > t_delta and not world.first_action[PLAYER_B])):
-        actions[PLAYER_B][world.TURN] = world.actions[world.TURN]["RIGHT"]
-        action = True
-        buttons[PLAYER_B] = "l"
-    elif keys[pg.K_j] and (not prev_keys[pg.K_j] or (time.time() - t_press > t_delta and not world.first_action[PLAYER_B])):
+    elif (keys[pg.K_j] or (PLAYER_B == list(world.powers)[0] and spirit_actions[0].item() == 1)) and (not (prev_keys[pg.K_j] or (PLAYER_B == list(world.powers)[0] and prev_spirit_actions[0].item() == 1)) or (time.time() - t_press > t_delta and not world.first_action[PLAYER_B])):
         actions[PLAYER_B][world.TURN] = world.actions[world.TURN]["LEFT"]
         action = True
         buttons[PLAYER_B] = "j"
+    elif (keys[pg.K_l] or (PLAYER_B == list(world.powers)[0] and spirit_actions[0].item() == 2)) and (not (prev_keys[pg.K_l] or (PLAYER_B == list(world.powers)[0] and prev_spirit_actions[0].item() == 2)) or (time.time() - t_press > t_delta and not world.first_action[PLAYER_B])):
+        actions[PLAYER_B][world.TURN] = world.actions[world.TURN]["RIGHT"]
+        action = True
+        buttons[PLAYER_B] = "l"
 
     if action:
         t_press = time.time()
-        _, rewards, done, _ = world.step(actions)
+        obs, rewards, done, _ = world.step(actions)
         print(f"{world.time_step - 1:>{len_str_episode_length}}:\n"
               f"  actions: {buttons}\n"
               f"  rewards: {rewards}")
