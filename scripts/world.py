@@ -42,7 +42,8 @@ spirit.load_state_dict(
     torch.load(
         os.path.join(
             "spirits",
-            "power_31916032.state_dict"
+            # "angel_6399488.state_dict"
+            "power_3199488.state_dict"
         ),
         map_location=torch.device("cpu")
     )
@@ -53,6 +54,9 @@ spirit.eval()
 keys = pg.key.get_pressed()
 
 spirit_actions = [torch.tensor(0), torch.tensor(0)]
+
+total_rewards  = np.zeros(2, dtype=world.float_dtype)
+total_episodes = np.ones( 1, dtype=world.int_dtype)
 
 # Game loop
 t_press = 1000000
@@ -113,11 +117,17 @@ while running:
     if action:
         t_press = time.time()
         obs, rewards, done, _ = world.step(actions)
+        total_rewards += rewards
         print(f"{world.time_step - 1:>{len_str_episode_length}}:\n"
               f"  actions: {buttons}\n"
-              f"  rewards: {rewards}")
+              f"  rewards: {rewards}\n"
+              f"  running average rewards:"
+        )
+        for total_reward in total_rewards:
+              print(f"    {total_reward/total_episodes[0]} = {total_reward}/{total_episodes[0]}")
         if done:
             world.reset()
+            total_episodes += 1
 
     # Render the game
     world.render()
