@@ -84,7 +84,6 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         """
         Rotate the coordinates based on orientation
         """
-        return coordinates.copy()
         k = self.grid_length - 1
         y = coordinates[0]
         x = coordinates[1]
