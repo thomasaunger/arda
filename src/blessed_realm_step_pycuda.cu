@@ -213,8 +213,8 @@ extern "C" {
       loc_y = goal_location_arr[kEnvId * NUM_COORDINATES    ];
       loc_x = goal_location_arr[kEnvId * NUM_COORDINATES + 1];
       RotateCoordinates(kGridLength, orientation_arr[kThisAgentArrayIdx], &loc_y, &loc_x);
-      obs_arr[kThisAgentIdxOffset + 2] = loc_y;
-      obs_arr[kThisAgentIdxOffset + 3] = loc_x;
+      obs_arr[kThisAgentIdxOffset + 2] = loc_y - obs_arr[kThisAgentIdxOffset    ];
+      obs_arr[kThisAgentIdxOffset + 3] = loc_x - obs_arr[kThisAgentIdxOffset + 1];
       obs_arr[kThisAgentIdxOffset + 4] = orientation_arr[kThisAgentArrayIdx];
     }
   }

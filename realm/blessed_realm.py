@@ -56,6 +56,12 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
                     ),
                     self.rotate_coordinates(
                         np.array(
+                            self.agent_locations[agent_id],
+                            dtype=self.float_dtype,
+                        ),
+                        self.agent_orientations[agent_id]
+                    ) - self.rotate_coordinates(
+                        np.array(
                             self.goal_location,
                             dtype=self.float_dtype,
                             ),
