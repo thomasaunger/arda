@@ -167,46 +167,47 @@ class Realm(gym.Env):
         assert len(actions) == self.num_agents
 
         for agent_id, action in actions.items():
-            match action[Realm.TURN]:
-                case Realm.LEFT:
-                    self.agent_orientations[agent_id] -= 1
-                    self.last_move_legal[agent_id] = True
-                    self.first_action[agent_id] = False
-                case Realm.RIGHT:
-                    self.agent_orientations[agent_id] += 1
-                    self.last_move_legal[agent_id] = True
-                    self.first_action[agent_id] = False
-            
-            self.agent_orientations[agent_id] %= Realm.NUM_ORIENTATIONS
-            
-            match action[Realm.MOVE]:
-                case Realm.FORWARD:
-                    new_location = self.agent_locations[agent_id].copy()
-                    match self.agent_orientations[agent_id]:
-                        case Realm.NORTH:
-                            new_location[Realm.COORDINATE_Y] -= 1
-                            self.first_action[agent_id] = False
-                        case Realm.EAST:
-                            new_location[Realm.COORDINATE_X] += 1
-                            self.first_action[agent_id] = False
-                        case Realm.SOUTH:
-                            new_location[Realm.COORDINATE_Y] += 1
-                            self.first_action[agent_id] = False
-                        case Realm.WEST:
-                            new_location[Realm.COORDINATE_X] -= 1
-                            self.first_action[agent_id] = False
-                    
-                    new_location = np.clip(new_location, 0, np.array(self.grid.shape) - 1, dtype=self.int_dtype)
+            if 0 < action[Realm.MOVE]:
+                match action[Realm.MOVE]:
+                    case Realm.FORWARD:
+                        new_location = self.agent_locations[agent_id].copy()
+                        match self.agent_orientations[agent_id]:
+                            case Realm.NORTH:
+                                new_location[Realm.COORDINATE_Y] -= 1
+                                self.first_action[agent_id] = False
+                            case Realm.EAST:
+                                new_location[Realm.COORDINATE_X] += 1
+                                self.first_action[agent_id] = False
+                            case Realm.SOUTH:
+                                new_location[Realm.COORDINATE_Y] += 1
+                                self.first_action[agent_id] = False
+                            case Realm.WEST:
+                                new_location[Realm.COORDINATE_X] -= 1
+                                self.first_action[agent_id] = False
+                        
+                        new_location = np.clip(new_location, 0, np.array(self.grid.shape) - 1, dtype=self.int_dtype)
 
-                    if new_location[Realm.COORDINATE_Y] == self.goal_location[Realm.COORDINATE_Y] and new_location[Realm.COORDINATE_X] == self.goal_location[Realm.COORDINATE_X]:
-                        self.goal_reached[agent_id] = True
-                    elif not self._occupied(new_location):
-                        self.grid[self.agent_locations[agent_id][Realm.COORDINATE_Y], self.agent_locations[agent_id][Realm.COORDINATE_X]] = 0
-                        self.grid[new_location[Realm.COORDINATE_Y], new_location[Realm.COORDINATE_X]] = agent_id + 2
-                        self.agent_locations[agent_id] = new_location
+                        if new_location[Realm.COORDINATE_Y] == self.goal_location[Realm.COORDINATE_Y] and new_location[Realm.COORDINATE_X] == self.goal_location[Realm.COORDINATE_X]:
+                            self.goal_reached[agent_id] = True
+                        elif not self._occupied(new_location):
+                            self.grid[self.agent_locations[agent_id][Realm.COORDINATE_Y], self.agent_locations[agent_id][Realm.COORDINATE_X]] = 0
+                            self.grid[new_location[Realm.COORDINATE_Y], new_location[Realm.COORDINATE_X]] = agent_id + 2
+                            self.agent_locations[agent_id] = new_location
+                            self.last_move_legal[agent_id] = True
+                        else:    
+                            self.last_move_legal[agent_id] = False
+            else:
+                match action[Realm.TURN]:
+                    case Realm.LEFT:
+                        self.agent_orientations[agent_id] -= 1
                         self.last_move_legal[agent_id] = True
-                    else:    
-                        self.last_move_legal[agent_id] = False
+                        self.first_action[agent_id] = False
+                    case Realm.RIGHT:
+                        self.agent_orientations[agent_id] += 1
+                        self.last_move_legal[agent_id] = True
+                        self.first_action[agent_id] = False
+                
+                self.agent_orientations[agent_id] %= Realm.NUM_ORIENTATIONS
 
         obss = self.observations
         rewards = self.rewards
