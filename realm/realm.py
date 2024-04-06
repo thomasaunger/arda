@@ -189,7 +189,7 @@ class Realm(gym.Env):
 
                         if new_location[Realm.COORDINATE_Y] == self.goal_location[Realm.COORDINATE_Y] and new_location[Realm.COORDINATE_X] == self.goal_location[Realm.COORDINATE_X]:
                             self.goal_reached[agent_id] = True
-                        elif not self._occupied(new_location):
+                        elif True:  # not self._occupied(new_location):
                             self.grid[self.agent_locations[agent_id][Realm.COORDINATE_Y], self.agent_locations[agent_id][Realm.COORDINATE_X]] = 0
                             self.grid[new_location[Realm.COORDINATE_Y], new_location[Realm.COORDINATE_X]] = agent_id + 2
                             self.agent_locations[agent_id] = new_location

@@ -268,15 +268,15 @@ extern "C" {
         kGridLength,
         loc_y_tmp,
         loc_x_tmp
-      ) && !LocationIsOccupied(
-        loc_y_arr,
-        loc_x_arr,
-        kNumAgents,
-        kEnvId,
-        kThisAgentId,
-        loc_y_tmp,
-        loc_x_tmp
-      )
+      )  // && !LocationIsOccupied(
+      //   loc_y_arr,
+      //   loc_x_arr,
+      //   kNumAgents,
+      //   kEnvId,
+      //   kThisAgentId,
+      //   loc_y_tmp,
+      //   loc_x_tmp
+      // )
     ) {
       // Update the location of the agent
       loc_y_arr[kThisAgentArrayIdx] = loc_y_tmp;
