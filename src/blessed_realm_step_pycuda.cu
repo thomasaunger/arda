@@ -26,14 +26,14 @@ extern "C" {
       *loc_y = loc_y_tmp;
       *loc_x = loc_x_tmp;
     } else if (orientation == EAST) {
-      *loc_y = loc_x_tmp;
-      *loc_x = kGridLength - 1 - loc_y_tmp;
+      *loc_y = kGridLength - 1 - loc_x_tmp;
+      *loc_x = loc_y_tmp;
     } else if (orientation == SOUTH) {
       *loc_y = kGridLength - 1 - loc_y_tmp;
       *loc_x = kGridLength - 1 - loc_x_tmp;
     } else if (orientation == WEST) {
-      *loc_y = kGridLength - 1 - loc_x_tmp;
-      *loc_x = loc_y_tmp;
+      *loc_y = loc_x_tmp;
+      *loc_x = kGridLength - 1 - loc_y_tmp;
     }
   }
 

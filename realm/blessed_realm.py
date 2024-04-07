@@ -91,11 +91,11 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
             case Realm.NORTH:
                 return coordinates.copy()
             case Realm.EAST:
-                return np.array([x,     k - y], dtype=self.int_dtype)
+                return np.array([k - x, y    ], dtype=self.int_dtype)
             case Realm.SOUTH:
                 return np.array([k - y, k - x], dtype=self.int_dtype)
             case Realm.WEST:
-                return np.array([k - x, y    ], dtype=self.int_dtype)
+                return np.array([x,     k - y], dtype=self.int_dtype)
 
     def get_data_dictionary(self):
         """
