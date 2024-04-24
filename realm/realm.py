@@ -49,7 +49,7 @@ class Realm(gym.Env):
             marred=False,
             num_agents=1,
             num_powers=1,
-            grid_length=8,
+            surface_length=8,
             episode_length=64,
             seed=None,
     ):
@@ -58,14 +58,14 @@ class Realm(gym.Env):
         self.float_dtype = np.float32
         self.int_dtype = np.int32
 
-        # Square 2D grid
-        assert grid_length > 0
-        self.grid_length = grid_length
+        # Square 2D surface
+        assert surface_length > 0
+        self.surface_length = surface_length
 
-        # Ensure that there are enough grid cells for all agents and the goal
-        assert num_agents < functools.reduce(operator.mul, (self.grid_length, self.grid_length))
+        # Ensure that there are enough surface cells for all agents and the goal
+        assert num_agents < functools.reduce(operator.mul, (self.surface_length, self.surface_length))
 
-        self.grid = np.zeros((self.grid_length, self.grid_length), dtype=self.int_dtype)
+        self.surface = np.zeros((self.surface_length, self.surface_length), dtype=self.int_dtype)
 
         # Seeding
         self.np_random = np.random
@@ -128,16 +128,16 @@ class Realm(gym.Env):
     
     def _get_unoccupied_location(self, locations):
         while True:
-            location = [np.random.randint(shape, dtype=self.int_dtype) for shape in self.grid.shape]
+            location = [np.random.randint(shape, dtype=self.int_dtype) for shape in self.surface.shape]
             if location not in locations:
                 return location
     
     def _occupied(self, location):
-        return 0 < self.grid[location[0], location[1]]
+        return 0 < self.surface[location[0], location[1]]
 
     def reset(self):
         # Reset the environment to its initial state
-        self.grid.fill(0)
+        self.surface.fill(0)
 
         self.agent_locations = []
         for _ in range(self.num_agents):
@@ -149,7 +149,7 @@ class Realm(gym.Env):
         self.agent_locations    = np.array(self.agent_locations, dtype=self.int_dtype)
         self.agent_orientations = np.random.randint(Realm.NUM_ORIENTATIONS, size=self.num_agents, dtype=self.int_dtype)
 
-        self.grid[self.agent_locations[:, Realm.COORDINATE_Y], self.agent_locations[:, Realm.COORDINATE_X]] = np.arange(self.num_agents, dtype=self.int_dtype) + 2
+        self.surface[self.agent_locations[:, Realm.COORDINATE_Y], self.agent_locations[:, Realm.COORDINATE_X]] = np.arange(self.num_agents, dtype=self.int_dtype) + 2
 
         self.goal_reached = np.array([False]*self.num_agents, dtype=self.int_dtype)
 
@@ -188,13 +188,13 @@ class Realm(gym.Env):
                                 new_location[Realm.COORDINATE_X] -= 1
                                 self.first_action[agent_id] = False
                         
-                        new_location = np.clip(new_location, 0, np.array(self.grid.shape) - 1, dtype=self.int_dtype)
+                        new_location = np.clip(new_location, 0, np.array(self.surface.shape) - 1, dtype=self.int_dtype)
 
                         if new_location[Realm.COORDINATE_Y] == self.goal_location[Realm.COORDINATE_Y] and new_location[Realm.COORDINATE_X] == self.goal_location[Realm.COORDINATE_X]:
                             self.goal_reached[agent_id] = True
                         elif True:  # not self._occupied(new_location):
-                            self.grid[self.agent_locations[agent_id][Realm.COORDINATE_Y], self.agent_locations[agent_id][Realm.COORDINATE_X]] = 0
-                            self.grid[new_location[Realm.COORDINATE_Y], new_location[Realm.COORDINATE_X]] = agent_id + 2
+                            self.surface[self.agent_locations[agent_id][Realm.COORDINATE_Y], self.agent_locations[agent_id][Realm.COORDINATE_X]] = 0
+                            self.surface[new_location[Realm.COORDINATE_Y], new_location[Realm.COORDINATE_X]] = agent_id + 2
                             self.agent_locations[agent_id] = new_location
                             self.last_move_legal[agent_id] = True
                         else:    

@@ -36,16 +36,16 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         """
         obss = {}
 
-        grid = self.grid.copy()
+        surface = self.surface.copy()
 
-        # add goal location to the grid
-        grid[self.goal_location[Realm.COORDINATE_Y], self.goal_location[Realm.COORDINATE_X]] = 1
+        # add goal location to the surface
+        surface[self.goal_location[Realm.COORDINATE_Y], self.goal_location[Realm.COORDINATE_X]] = 1
 
         for agent_id in range(self.num_agents):
             obss[agent_id] = np.concatenate(
                 [
                     # np.array([agent_id + 2], dtype=self.float_dtype),
-                    # np.rot90(grid, k=self.agent_orientations[agent_id]).reshape(-1),
+                    # np.rot90(surface, k=self.agent_orientations[agent_id]).reshape(-1),
                     # (self.agent_orientations - self.agent_orientations[agent_id]) % Realm.NUM_ORIENTATIONS,
                     self.rotate_coordinates(
                         np.array(
@@ -84,7 +84,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         """
         Rotate the coordinates based on orientation
         """
-        k = self.grid_length - 1
+        k = self.surface_length - 1
         y = coordinates[0]
         x = coordinates[1]
         match orientation:
@@ -107,8 +107,8 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
             data=self.marred,
         )
         data_dict.add_data(
-            name="grid_length",
-            data=self.grid_length,
+            name="surface_length",
+            data=self.surface_length,
         )
         data_dict.add_data(
             name=_LOC_Y,
@@ -149,7 +149,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
 
             args = [
                 "marred",
-                "grid_length",
+                "surface_length",
                 _LOC_Y,
                 _LOC_X,
                 _ORIENTATIONS,
@@ -168,7 +168,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
                 self.cuda_step(
                     *self.cuda_step_function_feed(args),
                     block=self.cuda_function_manager.block,
-                    grid=self.cuda_function_manager.grid,
+                    surface=self.cuda_function_manager.surface,
                 )
 
             self.time_step += 1

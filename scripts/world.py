@@ -20,7 +20,7 @@ HALTING = False
 
 
 # Create an instance of the Seen environment
-world = Realm(num_agents=1, grid_length=4)
+world = Realm(num_agents=1, surface_length=4)
 obs = world.reset()
 world.observation_space = recursive_obs_dict_to_spaces_dict(obs)
 len_str_episode_length = len(str(world.episode_length))
@@ -44,13 +44,7 @@ spirit.load_state_dict(
     torch.load(
         os.path.join(
             "spirits",
-            # "angel_6399488.state_dict"
-            # "power_3199488.state_dict"
-            # "power_6389760.state_dict"
-            # "angel_6389760.state_dict"
-            # "power_40960000.state_dict"
-            # "angel_40960000.state_dict"
-            "power_76791808.state_dict"
+            "power_25591808.state_dict"
         ),
         map_location=torch.device("cpu")
     )
@@ -82,6 +76,7 @@ while running:
     dists = [Categorical(probs=probs) for probs in out[0]]
     prev_spirit_actions = spirit_actions
     spirit_actions = [dist.sample() for dist in dists]
+    # spirit_actions = [torch.argmax(probs) for probs in out[0]]
 
     # Default actions
     actions = {agent_id: np.array(

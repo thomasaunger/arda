@@ -15,7 +15,7 @@ __constant__ int FORWARD = 1;
 extern "C" {
   // Device helper function to rotate coordinates
   __device__ void RotateCoordinates(
-    int kGridLength,
+    int kSurfaceLength,
     int orientation,
     int * loc_y,
     int * loc_x
@@ -26,24 +26,24 @@ extern "C" {
       *loc_y = loc_y_tmp;
       *loc_x = loc_x_tmp;
     } else if (orientation == EAST) {
-      *loc_y = kGridLength - 1 - loc_x_tmp;
+      *loc_y = kSurfaceLength - 1 - loc_x_tmp;
       *loc_x = loc_y_tmp;
     } else if (orientation == SOUTH) {
-      *loc_y = kGridLength - 1 - loc_y_tmp;
-      *loc_x = kGridLength - 1 - loc_x_tmp;
+      *loc_y = kSurfaceLength - 1 - loc_y_tmp;
+      *loc_x = kSurfaceLength - 1 - loc_x_tmp;
     } else if (orientation == WEST) {
       *loc_y = loc_x_tmp;
-      *loc_x = kGridLength - 1 - loc_y_tmp;
+      *loc_x = kSurfaceLength - 1 - loc_y_tmp;
     }
   }
 
   // Device helper function to check whether a location is within bounds
   __device__ bool LocationIsWithinBounds(
-    int kGridLength,
+    int kSurfaceLength,
     int loc_y,
     int loc_x
   ) {
-    return (0 <= loc_y && loc_y < kGridLength && 0 <= loc_x && loc_x < kGridLength);
+    return (0 <= loc_y && loc_y < kSurfaceLength && 0 <= loc_x && loc_x < kSurfaceLength);
   }
 
   // Device helper function to check whether a location is occupied
@@ -69,7 +69,7 @@ extern "C" {
 
   // Device helper function to generate an unoccupied location
   __device__ void GenerateUnoccupiedLocation(
-    int kGridLength,
+    int kSurfaceLength,
     int * loc_y_arr,
     int * loc_x_arr,
     int kNumAgents,
@@ -80,9 +80,9 @@ extern "C" {
     // Use last agent's state to generate a random location
     curandState_t* state = states[kEnvId * kNumAgents + kNumAgents - 1];
     do {
-      // Generate random coordinates from uniform distribution over [0, kGridLength - 1]
-      *loc_y = kGridLength * (1.0 - curand_uniform(state));
-      *loc_x = kGridLength * (1.0 - curand_uniform(state));
+      // Generate random coordinates from uniform distribution over [0, kSurfaceLength - 1]
+      *loc_y = kSurfaceLength * (1.0 - curand_uniform(state));
+      *loc_x = kSurfaceLength * (1.0 - curand_uniform(state));
     } while (LocationIsOccupied(
       loc_y_arr,
       loc_x_arr,
@@ -130,7 +130,7 @@ extern "C" {
 
   // Device helper function to generate observation
   __device__ void CudaBlessedRealmGenerateObservation(
-    int kGridLength,
+    int kSurfaceLength,
     int * loc_y_arr,
     int * loc_x_arr,
     int * orientation_arr,
@@ -169,7 +169,7 @@ extern "C" {
         for (int kAgentId = 0; kAgentId < kNumAgents; kAgentId++) {
           kAgentIdx = kEnvId * kNumAgents + kAgentId;
           GenerateUnoccupiedLocation(
-            kGridLength,
+            kSurfaceLength,
             loc_y_arr,
             loc_x_arr,
             kNumAgents,
@@ -183,7 +183,7 @@ extern "C" {
 
         // Reset goal location
         GenerateUnoccupiedLocation(
-          kGridLength,
+          kSurfaceLength,
           loc_y_arr,
           loc_x_arr,
           kNumAgents,
@@ -206,13 +206,13 @@ extern "C" {
 
       loc_y = loc_y_arr[kThisAgentArrayIdx];
       loc_x = loc_x_arr[kThisAgentArrayIdx];
-      RotateCoordinates(kGridLength, orientation_arr[kThisAgentArrayIdx], &loc_y, &loc_x);
+      RotateCoordinates(kSurfaceLength, orientation_arr[kThisAgentArrayIdx], &loc_y, &loc_x);
       obs_arr[kThisAgentIdxOffset    ] = loc_y;
       obs_arr[kThisAgentIdxOffset + 1] = loc_x;
 
       loc_y = goal_location_arr[kEnvId * NUM_COORDINATES    ];
       loc_x = goal_location_arr[kEnvId * NUM_COORDINATES + 1];
-      RotateCoordinates(kGridLength, orientation_arr[kThisAgentArrayIdx], &loc_y, &loc_x);
+      RotateCoordinates(kSurfaceLength, orientation_arr[kThisAgentArrayIdx], &loc_y, &loc_x);
       obs_arr[kThisAgentIdxOffset + 2] = loc_y - obs_arr[kThisAgentIdxOffset    ];
       obs_arr[kThisAgentIdxOffset + 3] = loc_x - obs_arr[kThisAgentIdxOffset + 1];
       obs_arr[kThisAgentIdxOffset + 4] = orientation_arr[kThisAgentArrayIdx];
@@ -221,7 +221,7 @@ extern "C" {
 
   __global__ void CudaBlessedRealmStep(
     const bool kMarred,
-    int kGridLength,
+    int kSurfaceLength,
     int * loc_y_arr,
     int * loc_x_arr,
     int * orientation_arr,
@@ -265,7 +265,7 @@ extern "C" {
 
     if (
       LocationIsWithinBounds(
-        kGridLength,
+        kSurfaceLength,
         loc_y_tmp,
         loc_x_tmp
       )  // && !LocationIsOccupied(
@@ -314,7 +314,7 @@ extern "C" {
     // Generate observation
     // -------------------------------
     CudaBlessedRealmGenerateObservation(
-      kGridLength,
+      kSurfaceLength,
       loc_y_arr,
       loc_x_arr,
       orientation_arr,
