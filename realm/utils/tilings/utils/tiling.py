@@ -1,0 +1,2 @@
+class Tiling:
+    pass

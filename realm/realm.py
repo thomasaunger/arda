@@ -3,6 +3,9 @@ import gym
 import numpy as np
 import operator
 
+from .utils import Agent
+from .utils.tilings import SquareTiling
+
 
 class Realm(gym.Env):
 
