@@ -36,7 +36,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         """
         obss = {}
 
-        surface = self.surface.copy()
+        surface = self.surface._surface.copy()
 
         # add goal location to the surface
         surface[self.goal_location[Realm.COORDINATE_Y], self.goal_location[Realm.COORDINATE_X]] = 1
@@ -46,7 +46,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
                 [
                     # np.array([agent_id + 2], dtype=self.float_dtype),
                     # np.rot90(surface, k=self.agent_orientations[agent_id]).reshape(-1),
-                    # (self.agent_orientations - self.agent_orientations[agent_id]) % Realm.NUM_ORIENTATIONS,
+                    # (self.agent_orientations - self.agent_orientations[agent_id]) % self.surface.symmetry_order,
                     self.rotate_coordinates(
                         np.array(
                             self.agent_locations[agent_id],
@@ -84,7 +84,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         """
         Rotate the coordinates based on orientation
         """
-        k = self.surface_length - 1
+        k = self.surface.length - 1
         y = coordinates[0]
         x = coordinates[1]
         match orientation:
@@ -108,7 +108,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         )
         data_dict.add_data(
             name="surface_length",
-            data=self.surface_length,
+            data=self.surface.length,
         )
         data_dict.add_data(
             name=_LOC_Y,

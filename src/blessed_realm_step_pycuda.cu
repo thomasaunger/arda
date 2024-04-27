@@ -1,6 +1,6 @@
 __constant__ int NUM_COORDINATES = 2;
 
-__constant__ int NUM_ORIENTATIONS = 4;
+__constant__ int SYMMETRY_ORDER = 4;
 
 __constant__ int NORTH = 0;
 __constant__ int EAST  = 1;
@@ -199,8 +199,8 @@ extern "C" {
           kAgentIdx = kEnvId * kNumAgents + kAgentId;
           // Use agent's state to generate a random orientation
           curandState_t* state = states[kAgentIdx];
-          // Generate a random orientation from uniform distribution over [0, NUM_ORIENTATIONS - 1]
-          orientation_arr[kAgentIdx] = NUM_ORIENTATIONS * (1.0 - curand_uniform(state));
+          // Generate a random orientation from uniform distribution over [0, SYMMETRY_ORDER - 1]
+          orientation_arr[kAgentIdx] = SYMMETRY_ORDER * (1.0 - curand_uniform(state));
         }
       }
 
@@ -258,9 +258,9 @@ extern "C" {
         loc_x_tmp -= 1;
       }
     } else if (action_turn == LEFT) {
-      orientation_arr[kThisAgentArrayIdx] = (orientation_arr[kThisAgentArrayIdx] + NUM_ORIENTATIONS - 1) % NUM_ORIENTATIONS;
+      orientation_arr[kThisAgentArrayIdx] = (orientation_arr[kThisAgentArrayIdx] + SYMMETRY_ORDER - 1) % SYMMETRY_ORDER;
     } else if (action_turn == RIGHT) {
-      orientation_arr[kThisAgentArrayIdx] = (orientation_arr[kThisAgentArrayIdx] +                    1) % NUM_ORIENTATIONS;
+      orientation_arr[kThisAgentArrayIdx] = (orientation_arr[kThisAgentArrayIdx] +                    1) % SYMMETRY_ORDER;
     }
 
     if (

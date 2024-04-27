@@ -25,8 +25,8 @@ class Seen(Realm):
         pg.display.set_caption("Realm")
 
     def _agent_image(self, agent_id):
-        y_offset = (self.screen.get_height() - self.surface.shape[Realm.COORDINATE_Y]*CELL_LENGTH_Y)//2
-        x_offset = (self.screen.get_width()  - self.surface.shape[Realm.COORDINATE_X]*CELL_LENGTH_X)//2
+        y_offset = (self.screen.get_height() - self.surface._surface.shape[Realm.COORDINATE_Y]*CELL_LENGTH_Y)//2
+        x_offset = (self.screen.get_width()  - self.surface._surface.shape[Realm.COORDINATE_X]*CELL_LENGTH_X)//2
 
         y = self.agent_locations[agent_id][Realm.COORDINATE_Y]
         x = self.agent_locations[agent_id][Realm.COORDINATE_X]
@@ -61,8 +61,8 @@ class Seen(Realm):
         # Render the environment
         self.screen.fill((0, 0, 0))  # Fill the screen with black color
 
-        y_offset = (self.screen.get_height() - self.surface.shape[Realm.COORDINATE_Y]*CELL_LENGTH_Y)//2
-        x_offset = (self.screen.get_width()  - self.surface.shape[Realm.COORDINATE_X]*CELL_LENGTH_X)//2
+        y_offset = (self.screen.get_height() - self.surface._surface.shape[Realm.COORDINATE_Y]*CELL_LENGTH_Y)//2
+        x_offset = (self.screen.get_width()  - self.surface._surface.shape[Realm.COORDINATE_X]*CELL_LENGTH_X)//2
 
         # Draw the agents
         for agent_id in range(self.num_agents):
@@ -93,12 +93,12 @@ class Seen(Realm):
         )
 
         # Draw the surface
-        for m in range(self.surface.shape[Realm.COORDINATE_Y] + 1):
+        for m in range(self.surface._surface.shape[Realm.COORDINATE_Y] + 1):
             y = y_offset + m*CELL_LENGTH_Y
-            pg.draw.line(self.screen, (255, 255, 255), (x_offset, y), (x_offset + self.surface.shape[Realm.COORDINATE_Y]*CELL_LENGTH_X, y))
+            pg.draw.line(self.screen, (255, 255, 255), (x_offset, y), (x_offset + self.surface._surface.shape[Realm.COORDINATE_Y]*CELL_LENGTH_X, y))
 
-        for n in range(self.surface.shape[Realm.COORDINATE_X] + 1):
+        for n in range(self.surface._surface.shape[Realm.COORDINATE_X] + 1):
             x = x_offset + n*CELL_LENGTH_X
-            pg.draw.line(self.screen, (255, 255, 255), (x, y_offset), (x, y_offset + self.surface.shape[Realm.COORDINATE_X]*CELL_LENGTH_Y))
+            pg.draw.line(self.screen, (255, 255, 255), (x, y_offset), (x, y_offset + self.surface._surface.shape[Realm.COORDINATE_X]*CELL_LENGTH_Y))
 
         pg.display.flip()  # Update the display

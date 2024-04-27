@@ -1,4 +1,4 @@
 from .tiling import Tiling
 
-class RegularTiling:
+class RegularTiling(Tiling):
     pass

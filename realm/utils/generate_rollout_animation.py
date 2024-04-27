@@ -24,7 +24,7 @@ def generate_tag_env_rollout_animation(
         assert isinstance(episode_states, dict)
         env = trainer.cuda_envs.env
 
-        surface_length = env.surface_length
+        surface_length = env.surface.length
         num_agents = env.num_agents
         episode_length = env.episode_length
     else:
