@@ -35,25 +35,25 @@ class Seen(Realm):
         x = self.agent_locations[agent_id][COORDINATE_X]
 
         match self.agent_orientations[agent_id]:
-            case Realm.NORTH:
+            case self.surface.NORTH:
                 return [
                     (x_offset +  x     *CELL_LENGTH_X + MARGIN,           y_offset + (y + 1)*CELL_LENGTH_Y - MARGIN),
                     (x_offset + (x + 1)*CELL_LENGTH_X - MARGIN,           y_offset + (y + 1)*CELL_LENGTH_Y - MARGIN),
                     (x_offset +  x     *CELL_LENGTH_X + CELL_LENGTH_X//2, y_offset +  y     *CELL_LENGTH_Y + MARGIN),
                 ]
-            case Realm.EAST:
+            case self.surface.EAST:
                 return [
                     (x_offset +  x     *CELL_LENGTH_X + MARGIN, y_offset +  y     *CELL_LENGTH_Y + MARGIN),
                     (x_offset +  x     *CELL_LENGTH_X + MARGIN, y_offset + (y + 1)*CELL_LENGTH_Y - MARGIN),
                     (x_offset + (x + 1)*CELL_LENGTH_X - MARGIN, y_offset +  y     *CELL_LENGTH_Y + CELL_LENGTH_Y//2),
                 ]
-            case Realm.SOUTH:
+            case self.surface.SOUTH:
                 return [
                     (x_offset + (x + 1)*CELL_LENGTH_X - MARGIN,           y_offset +  y     *CELL_LENGTH_Y + MARGIN),
                     (x_offset +  x     *CELL_LENGTH_X + MARGIN,           y_offset +  y     *CELL_LENGTH_Y + MARGIN),
                     (x_offset +  x     *CELL_LENGTH_X + CELL_LENGTH_X//2, y_offset + (y + 1)*CELL_LENGTH_Y - MARGIN),
                 ]
-            case Realm.WEST:
+            case self.surface.WEST:
                 return [
                     (x_offset + (x + 1)*CELL_LENGTH_X - MARGIN, y_offset + (y + 1)*CELL_LENGTH_Y - MARGIN),
                     (x_offset + (x + 1)*CELL_LENGTH_X - MARGIN, y_offset +  y     *CELL_LENGTH_Y + MARGIN),

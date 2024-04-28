@@ -46,20 +46,20 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
                     # np.array([agent_id + 2], dtype=self.float_dtype),
                     # np.rot90(surface, k=self.agent_orientations[agent_id]).reshape(-1),
                     # (self.agent_orientations - self.agent_orientations[agent_id]) % self.surface.SYMMETRY_ORDER,
-                    self.rotate_coordinates(
+                    self.surface.rotate_coordinates(
                         np.array(
                             self.agent_locations[agent_id],
                             dtype=self.float_dtype,
                         ),
                         self.agent_orientations[agent_id]
                     ),
-                    self.rotate_coordinates(
+                    self.surface.rotate_coordinates(
                         np.array(
                             self.goal_location,
                             dtype=self.float_dtype,
                             ),
                         self.agent_orientations[agent_id]
-                    ) - self.rotate_coordinates(
+                    ) - self.surface.rotate_coordinates(
                         np.array(
                             self.agent_locations[agent_id],
                             dtype=self.float_dtype,
@@ -78,23 +78,6 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         Compute and return the rewards for each agent.
         """
         return self.goal_reached*(1.0 - self.time_step/self.episode_length)
-    
-    def rotate_coordinates(self, coordinates, orientation):
-        """
-        Rotate the coordinates based on orientation
-        """
-        k = self.surface.length - 1
-        y = coordinates[0]
-        x = coordinates[1]
-        match orientation:
-            case Realm.NORTH:
-                return coordinates.copy()
-            case Realm.EAST:
-                return np.array([k - x, y    ], dtype=self.int_dtype)
-            case Realm.SOUTH:
-                return np.array([k - y, k - x], dtype=self.int_dtype)
-            case Realm.WEST:
-                return np.array([x,     k - y], dtype=self.int_dtype)
 
     def get_data_dictionary(self):
         """

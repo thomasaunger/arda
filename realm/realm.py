@@ -7,11 +7,6 @@ from .utils.tilings import SquareTiling
 
 class Realm(gym.Env):
 
-    NORTH = 0
-    EAST  = 1
-    SOUTH = 2
-    WEST  = 3
-
     TURN = 0
     MOVE = 1
 
@@ -123,7 +118,7 @@ class Realm(gym.Env):
                 return location
     
     def _occupied(self, location):
-        return 0 < self.surface._surface[location[0], location[1]]
+        return 0 < self.surface._surface[tuple(location.T)]
 
     def reset(self):
         # Reset the environment to its initial state
@@ -162,22 +157,10 @@ class Realm(gym.Env):
             if 0 < action[Realm.MOVE]:
                 match action[Realm.MOVE]:
                     case Realm.FORWARD:
-                        new_location = self.agent_locations[agent_id].copy()
-                        match self.agent_orientations[agent_id]:
-                            case Realm.NORTH:
-                                delta = np.array([-1, 0], dtype=self.int_dtype)
-                                self.first_action[agent_id] = False
-                            case Realm.EAST:
-                                delta = np.array([0, 1], dtype=self.int_dtype)
-                                self.first_action[agent_id] = False
-                            case Realm.SOUTH:
-                                delta = np.array([1, 0], dtype=self.int_dtype)
-                                self.first_action[agent_id] = False
-                            case Realm.WEST:
-                                delta = np.array([0, -1], dtype=self.int_dtype)
-                                self.first_action[agent_id] = False
+                        delta = self.surface.delta(self.agent_orientations[agent_id])
+                        self.first_action[agent_id] = False
                         
-                        new_location = np.clip(new_location + delta, 0, np.array(self.surface._surface.shape) - 1, dtype=self.int_dtype)
+                        new_location = np.clip(self.agent_locations[agent_id].copy() + delta, 0, np.array(self.surface._surface.shape) - 1, dtype=self.int_dtype)
 
                         if np.all(new_location == self.goal_location):
                             self.goal_reached[agent_id] = True
