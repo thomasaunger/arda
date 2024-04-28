@@ -26,6 +26,7 @@ class SquareTiling(RegularTiling):
         """
         Rotate the coordinates based on orientation
         """
+        # TODO: implement using matrix multiplication
         k = self.length - 1
         y = coordinates[0]
         x = coordinates[1]
