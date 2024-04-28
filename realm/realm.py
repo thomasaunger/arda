@@ -160,7 +160,7 @@ class Realm(gym.Env):
                         delta = self.surface.delta(self.agent_orientations[agent_id])
                         self.first_action[agent_id] = False
                         
-                        new_location = np.clip(self.agent_locations[agent_id].copy() + delta, 0, np.array(self.surface._surface.shape) - 1, dtype=self.int_dtype)
+                        new_location = np.clip(self.agent_locations[agent_id] + delta, 0, np.array(self.surface._surface.shape) - 1, dtype=self.int_dtype)
 
                         if np.all(new_location == self.goal_location):
                             self.goal_reached[agent_id] = True
