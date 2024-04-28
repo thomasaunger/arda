@@ -78,6 +78,12 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         Compute and return the rewards for each agent.
         """
         return self.goal_reached*(1.0 - self.time_step/self.episode_length)
+    
+    def coordinate_name(self, coordinate):
+        """
+        Return the coordinate name for the given coordinate
+        """
+        return _LOC_ + chr(ord('A') + (self.surface.NUM_COORDINATES + ord('X') - 1 - coordinate - ord('A')) % 26)
 
     def get_data_dictionary(self):
         """
@@ -94,7 +100,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         )
         for coordinate in range(self.surface.NUM_COORDINATES):
             data_dict.add_data(
-                name=_LOC_ + chr(ord('A') + (self.surface.NUM_COORDINATES + ord('X') - 1 - coordinate - ord('A')) % 26),
+                name=self.coordinate_name(coordinate),
                 data=np.ascontiguousarray(self.agent_locations[:, coordinate]),
                 save_copy_and_apply_at_reset=False,
                 log_data_across_episode=True,
@@ -127,8 +133,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
             args = [
                 "marred",
                 "surface_length",
-                _LOC_Y,
-                _LOC_X,
+                *[self.coordinate_name(coordinate) for coordinate in range(self.surface.NUM_COORDINATES)],
                 _ORIENTATIONS,
                 "agent_types",
                 "goal_location",
