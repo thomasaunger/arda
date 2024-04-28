@@ -1,16 +1,11 @@
-import functools
 import gym
 import numpy as np
-import operator
 
 from .utils import Agent
 from .utils.tilings import SquareTiling
 
 
 class Realm(gym.Env):
-
-    COORDINATE_Y = 0
-    COORDINATE_X = 1
 
     NORTH = 0
     EAST  = 1
@@ -122,8 +117,9 @@ class Realm(gym.Env):
     
     def _get_unoccupied_location(self, locations):
         while True:
-            location = [np.random.randint(shape, dtype=self.int_dtype) for shape in self.surface._surface.shape]
-            if location not in locations:
+            location = np.array([np.random.randint(shape, dtype=self.int_dtype) for shape in self.surface._surface.shape], dtype=self.int_dtype)
+            print(location)
+            if not np.any(np.all(location == locations, axis=1)):
                 return location
     
     def _occupied(self, location):
@@ -133,17 +129,16 @@ class Realm(gym.Env):
         # Reset the environment to its initial state
         self.surface._surface.fill(0)
 
-        self.agent_locations = []
+        self.agent_locations = np.zeros((0, 2), dtype=self.int_dtype)
         for _ in range(self.num_agents):
             location = self._get_unoccupied_location(self.agent_locations)
-            self.agent_locations.append(location)
+            self.agent_locations = np.vstack([self.agent_locations, location])
         
         self.goal_location = self._get_unoccupied_location(self.agent_locations)
         
-        self.agent_locations    = np.array(self.agent_locations, dtype=self.int_dtype)
-        self.agent_orientations = np.random.randint(self.surface.symmetry_order, size=self.num_agents, dtype=self.int_dtype)
+        self.agent_orientations = np.random.randint(self.surface.SYMMETRY_ORDER, size=self.num_agents, dtype=self.int_dtype)
 
-        self.surface._surface[self.agent_locations[:, Realm.COORDINATE_Y], self.agent_locations[:, Realm.COORDINATE_X]] = np.arange(self.num_agents, dtype=self.int_dtype) + 2
+        self.surface._surface[tuple(self.agent_locations.T)] = np.arange(self.num_agents, dtype=self.int_dtype) + 2
 
         self.goal_reached = np.array([False]*self.num_agents, dtype=self.int_dtype)
 
@@ -170,25 +165,25 @@ class Realm(gym.Env):
                         new_location = self.agent_locations[agent_id].copy()
                         match self.agent_orientations[agent_id]:
                             case Realm.NORTH:
-                                new_location[Realm.COORDINATE_Y] -= 1
+                                delta = np.array([-1, 0], dtype=self.int_dtype)
                                 self.first_action[agent_id] = False
                             case Realm.EAST:
-                                new_location[Realm.COORDINATE_X] += 1
+                                delta = np.array([0, 1], dtype=self.int_dtype)
                                 self.first_action[agent_id] = False
                             case Realm.SOUTH:
-                                new_location[Realm.COORDINATE_Y] += 1
+                                delta = np.array([1, 0], dtype=self.int_dtype)
                                 self.first_action[agent_id] = False
                             case Realm.WEST:
-                                new_location[Realm.COORDINATE_X] -= 1
+                                delta = np.array([0, -1], dtype=self.int_dtype)
                                 self.first_action[agent_id] = False
                         
-                        new_location = np.clip(new_location, 0, np.array(self.surface._surface.shape) - 1, dtype=self.int_dtype)
+                        new_location = np.clip(new_location + delta, 0, np.array(self.surface._surface.shape) - 1, dtype=self.int_dtype)
 
-                        if new_location[Realm.COORDINATE_Y] == self.goal_location[Realm.COORDINATE_Y] and new_location[Realm.COORDINATE_X] == self.goal_location[Realm.COORDINATE_X]:
+                        if np.all(new_location == self.goal_location):
                             self.goal_reached[agent_id] = True
                         elif True:  # not self._occupied(new_location):
-                            self.surface._surface[self.agent_locations[agent_id][Realm.COORDINATE_Y], self.agent_locations[agent_id][Realm.COORDINATE_X]] = 0
-                            self.surface._surface[new_location[Realm.COORDINATE_Y], new_location[Realm.COORDINATE_X]] = agent_id + 2
+                            self.surface._surface[tuple(self.agent_locations[agent_id].T)] = 0
+                            self.surface._surface[tuple(new_location.T)] = agent_id + 2
                             self.agent_locations[agent_id] = new_location
                             self.last_move_legal[agent_id] = True
                         else:    
@@ -204,7 +199,7 @@ class Realm(gym.Env):
                         self.last_move_legal[agent_id] = True
                         self.first_action[agent_id] = False
                 
-                self.agent_orientations[agent_id] %= self.surface.symmetry_order
+                self.agent_orientations[agent_id] %= self.surface.SYMMETRY_ORDER
 
         obss = self.observations
         rewards = self.rewards

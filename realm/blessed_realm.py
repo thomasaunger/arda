@@ -9,8 +9,7 @@ from .realm import Realm
 _OBSERVATIONS = Constants.OBSERVATIONS
 _ACTIONS = Constants.ACTIONS
 _REWARDS = Constants.REWARDS
-_LOC_Y = "loc_y"
-_LOC_X = "loc_x"
+_LOC_ = "loc_"
 _ORIENTATIONS = "orientations"
 
 
@@ -39,14 +38,14 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         surface = self.surface._surface.copy()
 
         # add goal location to the surface
-        surface[self.goal_location[Realm.COORDINATE_Y], self.goal_location[Realm.COORDINATE_X]] = 1
+        surface[tuple(self.goal_location.T)] = 1
 
         for agent_id in range(self.num_agents):
             obss[agent_id] = np.concatenate(
                 [
                     # np.array([agent_id + 2], dtype=self.float_dtype),
                     # np.rot90(surface, k=self.agent_orientations[agent_id]).reshape(-1),
-                    # (self.agent_orientations - self.agent_orientations[agent_id]) % self.surface.symmetry_order,
+                    # (self.agent_orientations - self.agent_orientations[agent_id]) % self.surface.SYMMETRY_ORDER,
                     self.rotate_coordinates(
                         np.array(
                             self.agent_locations[agent_id],
@@ -110,18 +109,13 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
             name="surface_length",
             data=self.surface.length,
         )
-        data_dict.add_data(
-            name=_LOC_Y,
-            data=np.ascontiguousarray(self.agent_locations[:, Realm.COORDINATE_Y]),
-            save_copy_and_apply_at_reset=False,
-            log_data_across_episode=True,
-        )
-        data_dict.add_data(
-            name=_LOC_X,
-            data=np.ascontiguousarray(self.agent_locations[:, Realm.COORDINATE_X]),
-            save_copy_and_apply_at_reset=False,
-            log_data_across_episode=True,
-        )
+        for coordinate in range(self.surface.NUM_COORDINATES):
+            data_dict.add_data(
+                name=_LOC_ + chr(ord('A') + (self.surface.NUM_COORDINATES + ord('X') - 1 - coordinate - ord('A')) % 26),
+                data=np.ascontiguousarray(self.agent_locations[:, coordinate]),
+                save_copy_and_apply_at_reset=False,
+                log_data_across_episode=True,
+            )
         data_dict.add_data(
             name=_ORIENTATIONS,
             data=self.agent_orientations,
