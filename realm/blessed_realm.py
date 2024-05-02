@@ -83,7 +83,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         """
         Return the coordinate name for the given coordinate
         """
-        return _LOC_ + chr(ord('A') + (self.surface.NUM_COORDINATES + ord('X') - 1 - coordinate - ord('A')) % 26)
+        return _LOC_ + chr(ord('a') + (self.surface.NUM_COORDINATES + ord('x') - 1 - coordinate - ord('a')) % 26)
 
     def get_data_dictionary(self):
         """
@@ -150,7 +150,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
                 self.cuda_step(
                     *self.cuda_step_function_feed(args),
                     block=self.cuda_function_manager.block,
-                    surface=self.cuda_function_manager.surface,
+                    grid=self.cuda_function_manager.grid,
                 )
 
             self.time_step += 1
