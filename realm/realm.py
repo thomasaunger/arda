@@ -113,7 +113,6 @@ class Realm(gym.Env):
     def _get_unoccupied_location(self, locations):
         while True:
             location = np.array([np.random.randint(shape, dtype=self.int_dtype) for shape in self.surface._surface.shape], dtype=self.int_dtype)
-            print(location)
             if not np.any(np.all(location == locations, axis=1)):
                 return location
     
