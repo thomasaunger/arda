@@ -30,8 +30,8 @@ class Registry:
 
     @property
     def powers(self):
-        return np.where(self._agent_types == Agent.POWER)[0].astype(self.int_dtype)
+        return np.where(self.agent_types == Agent.POWER)[0].astype(self.int_dtype)
     
     @property
     def angels(self):
-        return np.where(self._agent_types == Agent.ANGEL)[0].astype(self.int_dtype)
+        return np.where(self.agent_types == Agent.ANGEL)[0].astype(self.int_dtype)
