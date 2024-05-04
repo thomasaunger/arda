@@ -2,6 +2,8 @@ import pygame as pg
 
 from .blessed_realm import BlessedRealm as Realm
 
+from .utils import Agent
+
 SCREEN_LENGTH_Y = 480
 SCREEN_LENGTH_X = 640
 
@@ -69,7 +71,7 @@ class Seen(Realm):
 
         # Draw the agents
         for agent_id in range(self.num_agents):
-            if self.agent_types[agent_id] == Realm.ANGEL:
+            if self.registry.agent_types[agent_id] == Agent.ANGEL:
                 color = (255, 0, 0)
             else:
                 color = (0, 0, 255)

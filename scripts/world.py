@@ -31,8 +31,8 @@ spirit_config = dict(
 )
 policy = "power"
 policy_tag_to_agent_id_map = {
-    "power": list(world.powers),
-    "angel": list(world.angels),
+    "power": world.registry.powers,
+    "angel": world.registry.angels,
 }
 spirit = FullyConnected(
     world,
@@ -72,7 +72,7 @@ while running:
     prev_keys = keys
     keys = pg.key.get_pressed()
 
-    out = spirit(torch.from_numpy(obs[list(world.powers)[0]]))
+    out = spirit(torch.from_numpy(obs[world.registry.powers[0]]))
     dists = [Categorical(probs=probs) for probs in out[0]]
     prev_spirit_actions = spirit_actions
     spirit_actions = [dist.sample() for dist in dists]
@@ -90,28 +90,28 @@ while running:
 
     action = False
 
-    if (keys[pg.K_UP] or (PLAYER_A == list(world.powers)[0] and spirit_actions[1].item() == 1)) and (not (prev_keys[pg.K_UP] or (PLAYER_A == list(world.powers)[0] and prev_spirit_actions[1].item() == 1)) or (time.time() - t_press > t_delta and (not world.first_action[PLAYER_A] or not HALTING) and world.last_move_legal[PLAYER_A])):
+    if (keys[pg.K_UP] or (PLAYER_A == list(world.registry.powers)[0] and spirit_actions[1].item() == 1)) and (not (prev_keys[pg.K_UP] or (PLAYER_A == list(world.registry.powers)[0] and prev_spirit_actions[1].item() == 1)) or (time.time() - t_press > t_delta and (not world.first_action[PLAYER_A] or not HALTING) and world.last_move_legal[PLAYER_A])):
         actions[PLAYER_A][world.MOVE] = world.actions[world.MOVE]["FORWARD"]
         action = True
         buttons[PLAYER_A] = "UP"
-    elif (keys[pg.K_LEFT] or (PLAYER_A == list(world.powers)[0] and spirit_actions[0].item() == 1)) and (not (prev_keys[pg.K_LEFT] or (PLAYER_A == list(world.powers)[0] and prev_spirit_actions[0].item() == 1)) or (time.time() - t_press > t_delta and (not world.first_action[PLAYER_A] or not HALTING))):
+    elif (keys[pg.K_LEFT] or (PLAYER_A == list(world.registry.powers)[0] and spirit_actions[0].item() == 1)) and (not (prev_keys[pg.K_LEFT] or (PLAYER_A == list(world.registry.powers)[0] and prev_spirit_actions[0].item() == 1)) or (time.time() - t_press > t_delta and (not world.first_action[PLAYER_A] or not HALTING))):
         actions[PLAYER_A][world.TURN] = world.actions[world.TURN]["LEFT"]
         action = True
         buttons[PLAYER_A] = "LEFT"
-    elif (keys[pg.K_RIGHT] or (PLAYER_A == list(world.powers)[0] and spirit_actions[0].item() == 2)) and (not (prev_keys[pg.K_RIGHT] or (PLAYER_A == list(world.powers)[0] and prev_spirit_actions[0].item() == 2)) or (time.time() - t_press > t_delta and (not world.first_action[PLAYER_A] or not HALTING))):
+    elif (keys[pg.K_RIGHT] or (PLAYER_A == list(world.registry.powers)[0] and spirit_actions[0].item() == 2)) and (not (prev_keys[pg.K_RIGHT] or (PLAYER_A == list(world.registry.powers)[0] and prev_spirit_actions[0].item() == 2)) or (time.time() - t_press > t_delta and (not world.first_action[PLAYER_A] or not HALTING))):
         actions[PLAYER_A][world.TURN] = world.actions[world.TURN]["RIGHT"]
         action = True
         buttons[PLAYER_A] = "RIGHT"
     
-    if (keys[pg.K_i] or (PLAYER_B == list(world.powers)[0] and spirit_actions[1].item() == 1)) and (not (prev_keys[pg.K_i] or (PLAYER_B == list(world.powers)[0] and prev_spirit_actions[1].item() == 1)) or (time.time() - t_press > t_delta and (not world.first_action[PLAYER_B] or not HALTING) and world.last_move_legal[PLAYER_B])):
+    if (keys[pg.K_i] or (PLAYER_B == list(world.registry.powers)[0] and spirit_actions[1].item() == 1)) and (not (prev_keys[pg.K_i] or (PLAYER_B == list(world.registry.powers)[0] and prev_spirit_actions[1].item() == 1)) or (time.time() - t_press > t_delta and (not world.first_action[PLAYER_B] or not HALTING) and world.last_move_legal[PLAYER_B])):
         actions[PLAYER_B][world.MOVE] = world.actions[world.MOVE]["FORWARD"]
         action = True
         buttons[PLAYER_B] = "i"
-    elif (keys[pg.K_j] or (PLAYER_B == list(world.powers)[0] and spirit_actions[0].item() == 1)) and (not (prev_keys[pg.K_j] or (PLAYER_B == list(world.powers)[0] and prev_spirit_actions[0].item() == 1)) or (time.time() - t_press > t_delta and (not world.first_action[PLAYER_B] or not HALTING))):
+    elif (keys[pg.K_j] or (PLAYER_B == list(world.registry.powers)[0] and spirit_actions[0].item() == 1)) and (not (prev_keys[pg.K_j] or (PLAYER_B == list(world.registry.powers)[0] and prev_spirit_actions[0].item() == 1)) or (time.time() - t_press > t_delta and (not world.first_action[PLAYER_B] or not HALTING))):
         actions[PLAYER_B][world.TURN] = world.actions[world.TURN]["LEFT"]
         action = True
         buttons[PLAYER_B] = "j"
-    elif (keys[pg.K_l] or (PLAYER_B == list(world.powers)[0] and spirit_actions[0].item() == 2)) and (not (prev_keys[pg.K_l] or (PLAYER_B == list(world.powers)[0] and prev_spirit_actions[0].item() == 2)) or (time.time() - t_press > t_delta and (not world.first_action[PLAYER_B] or not HALTING))):
+    elif (keys[pg.K_l] or (PLAYER_B == list(world.registry.powers)[0] and spirit_actions[0].item() == 2)) and (not (prev_keys[pg.K_l] or (PLAYER_B == list(world.registry.powers)[0] and prev_spirit_actions[0].item() == 2)) or (time.time() - t_press > t_delta and (not world.first_action[PLAYER_B] or not HALTING))):
         actions[PLAYER_B][world.TURN] = world.actions[world.TURN]["RIGHT"]
         action = True
         buttons[PLAYER_B] = "l"

@@ -102,9 +102,9 @@ def generate_tag_env_rollout_animation(
         orientation = episode_states["orientations"][0, idx]
         vertices = state_to_vertices(y, x, orientation)
         if trainer is not None:
-            if idx in env.powers:
+            if idx in env.registry.powers:
                 color = power_color
-            elif idx in env.angels:
+            elif idx in env.registry.angels:
                 color = angel_color
         else:
             color = power_color if idx == 0 else angel_color

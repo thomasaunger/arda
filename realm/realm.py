@@ -1,7 +1,7 @@
 import gym
 import numpy as np
 
-from .utils import Agent
+from .utils import Registry
 from .utils.tilings import SquareTiling
 
 
@@ -16,9 +16,6 @@ class Realm(gym.Env):
     RIGHT = 2
 
     FORWARD = 1
-
-    POWER = 0
-    ANGEL = 1
 
     actions = {
         TURN: {
@@ -45,39 +42,23 @@ class Realm(gym.Env):
         self.float_dtype = np.float32
         self.int_dtype = np.int32
 
+        # Seeding
+        self.np_random = np.random
+        if seed is not None:
+            self._seed(seed)
+        
+        assert episode_length > 0
+        self.episode_length = episode_length
+
         # Create surface
         self.surface = SquareTiling(surface_length, self.int_dtype)
 
         # Ensure that there is enough space for all agents and the goal
         assert num_agents < self.surface.volume
 
-        # Seeding
-        self.np_random = np.random
-        if seed is not None:
-            self._seed(seed)
+        self.registry = Registry(num_agents, num_powers, self.np_random, self.int_dtype)
 
-        assert episode_length > 0
-        self.episode_length = episode_length
-
-        self.num_agents = num_agents
-
-        self.num_powers = num_powers
-
-        # Starting powers
-        powers = self.np_random.choice(
-            np.arange(self.num_agents), self.num_powers, replace=False
-        )
-
-        self.agent_types = {}
-        self.powers = {}
-        self.angels = {}
-        for agent_id in range(self.num_agents):
-            if agent_id in set(powers):
-                self.agent_types[agent_id] = Realm.POWER
-                self.powers[agent_id] = True
-            else:
-                self.agent_types[agent_id] = Realm.ANGEL
-                self.angels[agent_id] = True
+        self.marred = marred
 
         # These will be set during reset (see below)
         self.time_step = None
@@ -90,8 +71,10 @@ class Realm(gym.Env):
                 tuple([len(action) for action in Realm.actions.values()])
             ) for agent_id in range(self.num_agents)
         }
-
-        self.marred = marred
+    
+    @property
+    def num_agents(self):
+        return self.registry.num_agents
     
     @property
     def observations(self):
@@ -112,7 +95,7 @@ class Realm(gym.Env):
     
     def _get_unoccupied_location(self, locations):
         while True:
-            location = np.array([np.random.randint(shape, dtype=self.int_dtype) for shape in self.surface._surface.shape], dtype=self.int_dtype)
+            location = np.array([self.np_random.randint(shape, dtype=self.int_dtype) for shape in self.surface._surface.shape], dtype=self.int_dtype)
             if not np.any(np.all(location == locations, axis=1)):
                 return location
     
@@ -130,7 +113,7 @@ class Realm(gym.Env):
         
         self.goal_location = self._get_unoccupied_location(self.agent_locations)
         
-        self.agent_orientations = np.random.randint(self.surface.SYMMETRY_ORDER, size=self.num_agents, dtype=self.int_dtype)
+        self.agent_orientations = self.np_random.randint(self.surface.SYMMETRY_ORDER, size=self.num_agents, dtype=self.int_dtype)
 
         self.surface._surface[tuple(self.agent_locations.T)] = np.arange(self.num_agents, dtype=self.int_dtype) + 2
 

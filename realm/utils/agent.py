@@ -1,2 +1,4 @@
 class Agent:
-    pass
+
+    POWER = 0
+    ANGEL = 1
