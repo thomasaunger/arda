@@ -57,11 +57,7 @@ class Realm(gym.Env):
 
         self.marred = marred
 
-        # These will be set during reset (see below)
-        self.time_step = None
-        self.global_state = None
-
-        # Defining observation and action spaces
+        # Define observation and action spaces
         self.observation_space = None  # Note: this will be set via the env_wrapper
         self.action_space = {
             agent_id: gym.spaces.MultiDiscrete(
@@ -72,6 +68,10 @@ class Realm(gym.Env):
     @property
     def num_agents(self):
         return self.space.num_agents
+    
+    @property
+    def goal_reached(self):
+        return np.all(self.space.agent_points == self.goal_point, axis=1)
     
     @property
     def observations(self):
@@ -96,15 +96,7 @@ class Realm(gym.Env):
 
         self.goal_point = self.space.get_unoccupied_point(self.space.agent_points)
 
-        self.goal_reached = np.array([False]*self.num_agents, dtype=self.int_dtype)
-
         self.time_step = 0
-
-        self.global_state = {}
-
-        self.last_move_legal = [True]*self.num_agents
-
-        self.first_action = [True]*self.num_agents
 
         return self.observations
 
@@ -119,29 +111,19 @@ class Realm(gym.Env):
                 match action[Realm.MOVE]:
                     case Realm.FORWARD:
                         delta = self.space.delta(self.space.agent_orientations[agent_id])
-                        self.first_action[agent_id] = False
                         
                         new_point = np.clip(self.space.agent_points[agent_id] + delta, 0, np.array(self.space._space.shape) - 1, dtype=self.int_dtype)
 
-                        if np.all(new_point == self.goal_point):
-                            self.goal_reached[agent_id] = True
-                        elif True:  # not self.occupied(new_point):
+                        if True:  # not self.occupied(new_point):
                             self.space._space[tuple(self.space.agent_points[agent_id].T)] = 0
                             self.space._space[tuple(new_point.T)] = agent_id + 2
                             self.space.agent_points[agent_id] = new_point
-                            self.last_move_legal[agent_id] = True
-                        else:    
-                            self.last_move_legal[agent_id] = False
             else:
                 match action[Realm.TURN]:
                     case Realm.LEFT:
                         self.space.agent_orientations[agent_id] -= 1
-                        self.last_move_legal[agent_id] = True
-                        self.first_action[agent_id] = False
                     case Realm.RIGHT:
                         self.space.agent_orientations[agent_id] += 1
-                        self.last_move_legal[agent_id] = True
-                        self.first_action[agent_id] = False
                 
                 self.space.agent_orientations[agent_id] %= self.space.SYMMETRY_ORDER
 

@@ -16,8 +16,6 @@ from warp_drive.utils.recursive_obs_dict_to_spaces_dict import (
 PLAYER_A = 0
 PLAYER_B = 1
 
-HALTING = False
-
 
 # Create an instance of the Seen environment
 world = Realm(num_agents=1, space_length=4)
@@ -69,12 +67,10 @@ while running:
         if event.type == pg.QUIT:
             running = False
     
-    prev_keys = keys
     keys = pg.key.get_pressed()
 
     out = spirit(torch.from_numpy(obs[world.space.powers[0]]))
     dists = [Categorical(probs=probs) for probs in out[0]]
-    prev_spirit_actions = spirit_actions
     spirit_actions = [dist.sample() for dist in dists]
     # spirit_actions = [torch.argmax(probs) for probs in out[0]]
 
@@ -90,28 +86,28 @@ while running:
 
     action = False
 
-    if (keys[pg.K_UP] or (PLAYER_A == list(world.space.powers)[0] and spirit_actions[1].item() == 1)) and (not (prev_keys[pg.K_UP] or (PLAYER_A == list(world.space.powers)[0] and prev_spirit_actions[1].item() == 1)) or (time.time() - t_press > t_delta and (not world.first_action[PLAYER_A] or not HALTING) and world.last_move_legal[PLAYER_A])):
+    if keys[pg.K_UP] or (PLAYER_A == list(world.space.powers)[0] and spirit_actions[1].item() == 1):
         actions[PLAYER_A][world.MOVE] = world.actions[world.MOVE]["FORWARD"]
         action = True
         buttons[PLAYER_A] = "UP"
-    elif (keys[pg.K_LEFT] or (PLAYER_A == list(world.space.powers)[0] and spirit_actions[0].item() == 1)) and (not (prev_keys[pg.K_LEFT] or (PLAYER_A == list(world.space.powers)[0] and prev_spirit_actions[0].item() == 1)) or (time.time() - t_press > t_delta and (not world.first_action[PLAYER_A] or not HALTING))):
+    elif keys[pg.K_LEFT] or (PLAYER_A == list(world.space.powers)[0] and spirit_actions[0].item() == 1):
         actions[PLAYER_A][world.TURN] = world.actions[world.TURN]["LEFT"]
         action = True
         buttons[PLAYER_A] = "LEFT"
-    elif (keys[pg.K_RIGHT] or (PLAYER_A == list(world.space.powers)[0] and spirit_actions[0].item() == 2)) and (not (prev_keys[pg.K_RIGHT] or (PLAYER_A == list(world.space.powers)[0] and prev_spirit_actions[0].item() == 2)) or (time.time() - t_press > t_delta and (not world.first_action[PLAYER_A] or not HALTING))):
+    elif keys[pg.K_RIGHT] or (PLAYER_A == list(world.space.powers)[0] and spirit_actions[0].item() == 2):
         actions[PLAYER_A][world.TURN] = world.actions[world.TURN]["RIGHT"]
         action = True
         buttons[PLAYER_A] = "RIGHT"
     
-    if (keys[pg.K_i] or (PLAYER_B == list(world.space.powers)[0] and spirit_actions[1].item() == 1)) and (not (prev_keys[pg.K_i] or (PLAYER_B == list(world.space.powers)[0] and prev_spirit_actions[1].item() == 1)) or (time.time() - t_press > t_delta and (not world.first_action[PLAYER_B] or not HALTING) and world.last_move_legal[PLAYER_B])):
+    if keys[pg.K_i] or (PLAYER_B == list(world.space.powers)[0] and spirit_actions[1].item() == 1):
         actions[PLAYER_B][world.MOVE] = world.actions[world.MOVE]["FORWARD"]
         action = True
         buttons[PLAYER_B] = "i"
-    elif (keys[pg.K_j] or (PLAYER_B == list(world.space.powers)[0] and spirit_actions[0].item() == 1)) and (not (prev_keys[pg.K_j] or (PLAYER_B == list(world.space.powers)[0] and prev_spirit_actions[0].item() == 1)) or (time.time() - t_press > t_delta and (not world.first_action[PLAYER_B] or not HALTING))):
+    elif keys[pg.K_j] or (PLAYER_B == list(world.space.powers)[0] and spirit_actions[0].item() == 1):
         actions[PLAYER_B][world.TURN] = world.actions[world.TURN]["LEFT"]
         action = True
         buttons[PLAYER_B] = "j"
-    elif (keys[pg.K_l] or (PLAYER_B == list(world.space.powers)[0] and spirit_actions[0].item() == 2)) and (not (prev_keys[pg.K_l] or (PLAYER_B == list(world.space.powers)[0] and prev_spirit_actions[0].item() == 2)) or (time.time() - t_press > t_delta and (not world.first_action[PLAYER_B] or not HALTING))):
+    elif keys[pg.K_l] or (PLAYER_B == list(world.space.powers)[0] and spirit_actions[0].item() == 2):
         actions[PLAYER_B][world.TURN] = world.actions[world.TURN]["RIGHT"]
         action = True
         buttons[PLAYER_B] = "l"
