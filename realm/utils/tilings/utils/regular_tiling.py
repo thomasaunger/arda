@@ -31,10 +31,10 @@ class RegularTiling(Space):
     def _random_coordinates(self):
         return np.array([self.np_random.randint(shape, dtype=self.int_dtype) for shape in self._space.shape], dtype=self.int_dtype)
     
-    def get_unoccupied_point(self, points):
+    def get_unoccupied_point(self):
         while True:
             point = self._random_coordinates()
-            if not np.any(np.all(point == points, axis=1)):
+            if not np.any(np.all(point == self.agent_points, axis=1)):
                 return point
     
     def occupied(self, point):
@@ -44,7 +44,7 @@ class RegularTiling(Space):
         self._space.fill(0)
 
         for i in range(self.num_agents):
-            point = self.get_unoccupied_point(self.agent_points)
+            point = self.get_unoccupied_point()
             self._agent_points = np.vstack([self.agent_points[:i], point])
 
         self._space[tuple(self.agent_points.T)] = np.arange(self.num_agents, dtype=self.int_dtype) + 2

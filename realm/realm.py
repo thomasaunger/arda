@@ -94,7 +94,7 @@ class Realm(gym.Env):
         # Reset the environment to its initial state
         self.space.reset()
 
-        self.goal_point = self.space.get_unoccupied_point(self.space.agent_points)
+        self.goal_point = self.space.get_unoccupied_point()
 
         self.time_step = 0
 
