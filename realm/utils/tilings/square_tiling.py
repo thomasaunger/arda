@@ -13,14 +13,17 @@ class SquareTiling(RegularTiling):
     SOUTH = 2
     WEST  = 3
 
-    def __init__(self, length, int_dtype):
-        super().__init__(length, int_dtype)
+    def __init__(self, length, np_random, int_dtype):
+        super().__init__(length, np_random, int_dtype)
 
-        self._surface = np.zeros((self.length,)*self.NUM_COORDINATES, dtype=self.int_dtype)
+        self._space = np.zeros((self.length,)*self.NUM_COORDINATES, dtype=self.int_dtype)
 
     @property
     def volume(self):
         return self.length**2
+    
+    def random_coordinates(self):
+        return np.array([self.np_random.randint(shape, dtype=self.int_dtype) for shape in self._space.shape], dtype=self.int_dtype)
 
     def rotate_coordinates(self, coordinates, orientation):
         """

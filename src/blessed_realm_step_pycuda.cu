@@ -15,7 +15,7 @@ __constant__ int FORWARD = 1;
 extern "C" {
   // Device helper function to rotate coordinates
   __device__ void RotateCoordinates(
-    int kSurfaceLength,
+    int kSpaceLength,
     int orientation,
     int * loc_y,
     int * loc_x
@@ -26,28 +26,28 @@ extern "C" {
       *loc_y = loc_y_tmp;
       *loc_x = loc_x_tmp;
     } else if (orientation == EAST) {
-      *loc_y = kSurfaceLength - 1 - loc_x_tmp;
+      *loc_y = kSpaceLength - 1 - loc_x_tmp;
       *loc_x = loc_y_tmp;
     } else if (orientation == SOUTH) {
-      *loc_y = kSurfaceLength - 1 - loc_y_tmp;
-      *loc_x = kSurfaceLength - 1 - loc_x_tmp;
+      *loc_y = kSpaceLength - 1 - loc_y_tmp;
+      *loc_x = kSpaceLength - 1 - loc_x_tmp;
     } else if (orientation == WEST) {
       *loc_y = loc_x_tmp;
-      *loc_x = kSurfaceLength - 1 - loc_y_tmp;
+      *loc_x = kSpaceLength - 1 - loc_y_tmp;
     }
   }
 
-  // Device helper function to check whether a location is within bounds
-  __device__ bool LocationIsWithinBounds(
-    int kSurfaceLength,
+  // Device helper function to check whether a point is within bounds
+  __device__ bool PointIsWithinBounds(
+    int kSpaceLength,
     int loc_y,
     int loc_x
   ) {
-    return (0 <= loc_y && loc_y < kSurfaceLength && 0 <= loc_x && loc_x < kSurfaceLength);
+    return (0 <= loc_y && loc_y < kSpaceLength && 0 <= loc_x && loc_x < kSpaceLength);
   }
 
-  // Device helper function to check whether a location is occupied
-  __device__ bool LocationIsOccupied(
+  // Device helper function to check whether a point is occupied
+  __device__ bool PointIsOccupied(
     int * loc_y_arr,
     int * loc_x_arr,
     int kNumAgents,
@@ -67,9 +67,9 @@ extern "C" {
     return false;
   }
 
-  // Device helper function to generate an unoccupied location
-  __device__ void GenerateUnoccupiedLocation(
-    int kSurfaceLength,
+  // Device helper function to generate an unoccupied point
+  __device__ void GenerateUnoccupiedPoint(
+    int kSpaceLength,
     int * loc_y_arr,
     int * loc_x_arr,
     int kNumAgents,
@@ -77,13 +77,13 @@ extern "C" {
     int * loc_y,
     int * loc_x
   ) {
-    // Use last agent's state to generate a random location
+    // Use last agent's state to generate a random point
     curandState_t* state = states[kEnvId * kNumAgents + kNumAgents - 1];
     do {
-      // Generate random coordinates from uniform distribution over [0, kSurfaceLength - 1]
-      *loc_y = kSurfaceLength * (1.0 - curand_uniform(state));
-      *loc_x = kSurfaceLength * (1.0 - curand_uniform(state));
-    } while (LocationIsOccupied(
+      // Generate random coordinates from uniform distribution over [0, kSpaceLength - 1]
+      *loc_y = kSpaceLength * (1.0 - curand_uniform(state));
+      *loc_x = kSpaceLength * (1.0 - curand_uniform(state));
+    } while (PointIsOccupied(
       loc_y_arr,
       loc_x_arr,
       kNumAgents,
@@ -98,7 +98,7 @@ extern "C" {
   __device__ void CudaBlessedRealmComputeReward(
     int * loc_y_arr,
     int * loc_x_arr,
-    int * goal_location_arr,
+    int * goal_point_arr,
     float * rewards_arr,
     int * done_arr,
     int * env_timestep_arr,
@@ -113,8 +113,8 @@ extern "C" {
       rewards_arr[kThisAgentArrayIdx] = 0.0;
 
       // Check whether the agent has reached the goal
-      if (loc_y_arr[kThisAgentArrayIdx] == goal_location_arr[kEnvId * NUM_COORDINATES    ] &&
-          loc_x_arr[kThisAgentArrayIdx] == goal_location_arr[kEnvId * NUM_COORDINATES + 1]) {
+      if (loc_y_arr[kThisAgentArrayIdx] == goal_point_arr[kEnvId * NUM_COORDINATES    ] &&
+          loc_x_arr[kThisAgentArrayIdx] == goal_point_arr[kEnvId * NUM_COORDINATES + 1]) {
         rewards_arr[kThisAgentArrayIdx] = 1.0 * (1.0 - env_timestep_arr[kEnvId] / float(kEpisodeLength));
         // done_arr[kEnvId] = 1;
       }
@@ -130,11 +130,11 @@ extern "C" {
 
   // Device helper function to generate observation
   __device__ void CudaBlessedRealmGenerateObservation(
-    int kSurfaceLength,
+    int kSpaceLength,
     int * loc_y_arr,
     int * loc_x_arr,
     int * orientation_arr,
-    int * goal_location_arr,
+    int * goal_point_arr,
     float * obs_arr,
     int * done_arr,
     int * env_timestep_arr,
@@ -158,18 +158,18 @@ extern "C" {
       int loc_y;
       int loc_x;
       if (done_arr[kEnvId]) {
-        // Reinitialize agent locations
+        // Reinitialize agent points
         for (int kAgentId = 0; kAgentId < kNumAgents; kAgentId++) {
           kAgentIdx = kEnvId * kNumAgents + kAgentId;
           loc_y_arr[kAgentIdx] = -1;
           loc_x_arr[kAgentIdx] = -1;
         }
 
-        // Reset agent locations
+        // Reset agent points
         for (int kAgentId = 0; kAgentId < kNumAgents; kAgentId++) {
           kAgentIdx = kEnvId * kNumAgents + kAgentId;
-          GenerateUnoccupiedLocation(
-            kSurfaceLength,
+          GenerateUnoccupiedPoint(
+            kSpaceLength,
             loc_y_arr,
             loc_x_arr,
             kNumAgents,
@@ -181,9 +181,9 @@ extern "C" {
           loc_x_arr[kAgentIdx] = loc_x;
         }
 
-        // Reset goal location
-        GenerateUnoccupiedLocation(
-          kSurfaceLength,
+        // Reset goal point
+        GenerateUnoccupiedPoint(
+          kSpaceLength,
           loc_y_arr,
           loc_x_arr,
           kNumAgents,
@@ -191,8 +191,8 @@ extern "C" {
           &loc_y,
           &loc_x
         );
-        goal_location_arr[kEnvId * NUM_COORDINATES    ] = loc_y;
-        goal_location_arr[kEnvId * NUM_COORDINATES + 1] = loc_x;
+        goal_point_arr[kEnvId * NUM_COORDINATES    ] = loc_y;
+        goal_point_arr[kEnvId * NUM_COORDINATES + 1] = loc_x;
 
         // Reset agent orientations
         for (int kAgentId = 0; kAgentId < kNumAgents; kAgentId++) {
@@ -206,13 +206,13 @@ extern "C" {
 
       loc_y = loc_y_arr[kThisAgentArrayIdx];
       loc_x = loc_x_arr[kThisAgentArrayIdx];
-      RotateCoordinates(kSurfaceLength, orientation_arr[kThisAgentArrayIdx], &loc_y, &loc_x);
+      RotateCoordinates(kSpaceLength, orientation_arr[kThisAgentArrayIdx], &loc_y, &loc_x);
       obs_arr[kThisAgentIdxOffset    ] = loc_y;
       obs_arr[kThisAgentIdxOffset + 1] = loc_x;
 
-      loc_y = goal_location_arr[kEnvId * NUM_COORDINATES    ];
-      loc_x = goal_location_arr[kEnvId * NUM_COORDINATES + 1];
-      RotateCoordinates(kSurfaceLength, orientation_arr[kThisAgentArrayIdx], &loc_y, &loc_x);
+      loc_y = goal_point_arr[kEnvId * NUM_COORDINATES    ];
+      loc_x = goal_point_arr[kEnvId * NUM_COORDINATES + 1];
+      RotateCoordinates(kSpaceLength, orientation_arr[kThisAgentArrayIdx], &loc_y, &loc_x);
       obs_arr[kThisAgentIdxOffset + 2] = loc_y - obs_arr[kThisAgentIdxOffset    ];
       obs_arr[kThisAgentIdxOffset + 3] = loc_x - obs_arr[kThisAgentIdxOffset + 1];
       obs_arr[kThisAgentIdxOffset + 4] = orientation_arr[kThisAgentArrayIdx];
@@ -221,12 +221,12 @@ extern "C" {
 
   __global__ void CudaBlessedRealmStep(
     const bool kMarred,
-    int kSurfaceLength,
+    int kSpaceLength,
     int * loc_y_arr,
     int * loc_x_arr,
     int * orientation_arr,
     int * agent_types_arr,
-    int * goal_location_arr,
+    int * goal_point_arr,
     float * obs_arr,
     int * action_indices_arr,
     float * rewards_arr,
@@ -264,11 +264,11 @@ extern "C" {
     }
 
     if (
-      LocationIsWithinBounds(
-        kSurfaceLength,
+      PointIsWithinBounds(
+        kSpaceLength,
         loc_y_tmp,
         loc_x_tmp
-      )  // && !LocationIsOccupied(
+      )  // && !PointIsOccupied(
       //   loc_y_arr,
       //   loc_x_arr,
       //   kNumAgents,
@@ -278,7 +278,7 @@ extern "C" {
       //   loc_x_tmp
       // )
     ) {
-      // Update the location of the agent
+      // Update the point of the agent
       loc_y_arr[kThisAgentArrayIdx] = loc_y_tmp;
       loc_x_arr[kThisAgentArrayIdx] = loc_x_tmp;
     }
@@ -299,7 +299,7 @@ extern "C" {
     CudaBlessedRealmComputeReward(
       loc_y_arr,
       loc_x_arr,
-      goal_location_arr,
+      goal_point_arr,
       rewards_arr,
       done_arr,
       env_timestep_arr,
@@ -314,11 +314,11 @@ extern "C" {
     // Generate observation
     // -------------------------------
     CudaBlessedRealmGenerateObservation(
-      kSurfaceLength,
+      kSpaceLength,
       loc_y_arr,
       loc_x_arr,
       orientation_arr,
-      goal_location_arr,
+      goal_point_arr,
       obs_arr,
       done_arr,
       env_timestep_arr,

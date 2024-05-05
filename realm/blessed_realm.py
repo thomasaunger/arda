@@ -35,33 +35,33 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         """
         obss = {}
 
-        surface = self.surface._surface.copy()
+        space = self.space._space.copy()
 
-        # add goal location to the surface
-        surface[tuple(self.goal_location.T)] = 1
+        # add goal point to the space
+        space[tuple(self.goal_point.T)] = 1
 
         for agent_id in range(self.num_agents):
             obss[agent_id] = np.concatenate(
                 [
                     # np.array([agent_id + 2], dtype=self.float_dtype),
-                    # np.rot90(surface, k=self.agent_orientations[agent_id]).reshape(-1),
-                    # (self.agent_orientations - self.agent_orientations[agent_id]) % self.surface.SYMMETRY_ORDER,
-                    self.surface.rotate_coordinates(
+                    # np.rot90(space, k=self.agent_orientations[agent_id]).reshape(-1),
+                    # (self.agent_orientations - self.agent_orientations[agent_id]) % self.space.SYMMETRY_ORDER,
+                    self.space.rotate_coordinates(
                         np.array(
-                            self.agent_locations[agent_id],
+                            self.agent_points[agent_id],
                             dtype=self.float_dtype,
                         ),
                         self.agent_orientations[agent_id]
                     ),
-                    self.surface.rotate_coordinates(
+                    self.space.rotate_coordinates(
                         np.array(
-                            self.goal_location,
+                            self.goal_point,
                             dtype=self.float_dtype,
                             ),
                         self.agent_orientations[agent_id]
-                    ) - self.surface.rotate_coordinates(
+                    ) - self.space.rotate_coordinates(
                         np.array(
-                            self.agent_locations[agent_id],
+                            self.agent_points[agent_id],
                             dtype=self.float_dtype,
                         ),
                         self.agent_orientations[agent_id]
@@ -83,7 +83,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         """
         Return the coordinate name for the given coordinate
         """
-        return _LOC_ + chr(ord('a') + (self.surface.NUM_COORDINATES + ord('x') - 1 - coordinate - ord('a')) % 26)
+        return _LOC_ + chr(ord('a') + (self.space.NUM_COORDINATES + ord('x') - 1 - coordinate - ord('a')) % 26)
 
     def get_data_dictionary(self):
         """
@@ -95,13 +95,13 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
             data=self.marred,
         )
         data_dict.add_data(
-            name="surface_length",
-            data=self.surface.length,
+            name="space_length",
+            data=self.space.length,
         )
-        for coordinate in range(self.surface.NUM_COORDINATES):
+        for coordinate in range(self.space.NUM_COORDINATES):
             data_dict.add_data(
                 name=self.coordinate_name(coordinate),
-                data=np.ascontiguousarray(self.agent_locations[:, coordinate]),
+                data=np.ascontiguousarray(self.agent_points[:, coordinate]),
                 save_copy_and_apply_at_reset=False,
                 log_data_across_episode=True,
             )
@@ -116,8 +116,8 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
             data=self.registry.agent_types,
         )
         data_dict.add_data(
-            name="goal_location",
-            data=self.goal_location,
+            name="goal_point",
+            data=self.goal_point,
             save_copy_and_apply_at_reset=False,
             log_data_across_episode=True,
         )
@@ -132,11 +132,11 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
 
             args = [
                 "marred",
-                "surface_length",
-                *[self.coordinate_name(coordinate) for coordinate in range(self.surface.NUM_COORDINATES)],
+                "space_length",
+                *[self.coordinate_name(coordinate) for coordinate in range(self.space.NUM_COORDINATES)],
                 _ORIENTATIONS,
                 "agent_types",
-                "goal_location",
+                "goal_point",
                 _OBSERVATIONS,
                 _ACTIONS,
                 _REWARDS,

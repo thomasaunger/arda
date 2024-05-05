@@ -34,7 +34,7 @@ class Realm(gym.Env):
             marred=False,
             num_agents=1,
             num_powers=1,
-            surface_length=8,
+            space_length=8,
             episode_length=64,
             seed=None,
     ):
@@ -50,11 +50,11 @@ class Realm(gym.Env):
         assert episode_length > 0
         self.episode_length = episode_length
 
-        # Create surface
-        self.surface = SquareTiling(surface_length, self.int_dtype)
+        # Create space
+        self.space = SquareTiling(space_length, self.np_random, self.int_dtype)
 
         # Ensure that there is enough space for all agents and the goal
-        assert num_agents < self.surface.volume
+        assert num_agents < self.space.volume
 
         self.registry = Registry(num_agents, num_powers, self.np_random, self.int_dtype)
 
@@ -93,29 +93,29 @@ class Realm(gym.Env):
         self.np_random.seed(seed)
         return [seed]
     
-    def _get_unoccupied_location(self, locations):
+    def _get_unoccupied_point(self, points):
         while True:
-            location = np.array([self.np_random.randint(shape, dtype=self.int_dtype) for shape in self.surface._surface.shape], dtype=self.int_dtype)
-            if not np.any(np.all(location == locations, axis=1)):
-                return location
+            point = self.space.random_coordinates()
+            if not np.any(np.all(point == points, axis=1)):
+                return point
     
-    def _occupied(self, location):
-        return 0 < self.surface._surface[tuple(location.T)]
+    def _occupied(self, point):
+        return 0 < self.space._space[tuple(point.T)]
 
     def reset(self):
         # Reset the environment to its initial state
-        self.surface._surface.fill(0)
+        self.space._space.fill(0)
 
-        self.agent_locations = np.zeros((0, 2), dtype=self.int_dtype)
+        self.agent_points = np.zeros((0, 2), dtype=self.int_dtype)
         for _ in range(self.num_agents):
-            location = self._get_unoccupied_location(self.agent_locations)
-            self.agent_locations = np.vstack([self.agent_locations, location])
+            point = self._get_unoccupied_point(self.agent_points)
+            self.agent_points = np.vstack([self.agent_points, point])
         
-        self.goal_location = self._get_unoccupied_location(self.agent_locations)
+        self.goal_point = self._get_unoccupied_point(self.agent_points)
         
-        self.agent_orientations = self.np_random.randint(self.surface.SYMMETRY_ORDER, size=self.num_agents, dtype=self.int_dtype)
+        self.agent_orientations = self.np_random.randint(self.space.SYMMETRY_ORDER, size=self.num_agents, dtype=self.int_dtype)
 
-        self.surface._surface[tuple(self.agent_locations.T)] = np.arange(self.num_agents, dtype=self.int_dtype) + 2
+        self.space._space[tuple(self.agent_points.T)] = np.arange(self.num_agents, dtype=self.int_dtype) + 2
 
         self.goal_reached = np.array([False]*self.num_agents, dtype=self.int_dtype)
 
@@ -139,17 +139,17 @@ class Realm(gym.Env):
             if 0 < action[Realm.MOVE]:
                 match action[Realm.MOVE]:
                     case Realm.FORWARD:
-                        delta = self.surface.delta(self.agent_orientations[agent_id])
+                        delta = self.space.delta(self.agent_orientations[agent_id])
                         self.first_action[agent_id] = False
                         
-                        new_location = np.clip(self.agent_locations[agent_id] + delta, 0, np.array(self.surface._surface.shape) - 1, dtype=self.int_dtype)
+                        new_point = np.clip(self.agent_points[agent_id] + delta, 0, np.array(self.space._space.shape) - 1, dtype=self.int_dtype)
 
-                        if np.all(new_location == self.goal_location):
+                        if np.all(new_point == self.goal_point):
                             self.goal_reached[agent_id] = True
-                        elif True:  # not self._occupied(new_location):
-                            self.surface._surface[tuple(self.agent_locations[agent_id].T)] = 0
-                            self.surface._surface[tuple(new_location.T)] = agent_id + 2
-                            self.agent_locations[agent_id] = new_location
+                        elif True:  # not self._occupied(new_point):
+                            self.space._space[tuple(self.agent_points[agent_id].T)] = 0
+                            self.space._space[tuple(new_point.T)] = agent_id + 2
+                            self.agent_points[agent_id] = new_point
                             self.last_move_legal[agent_id] = True
                         else:    
                             self.last_move_legal[agent_id] = False
@@ -164,7 +164,7 @@ class Realm(gym.Env):
                         self.last_move_legal[agent_id] = True
                         self.first_action[agent_id] = False
                 
-                self.agent_orientations[agent_id] %= self.surface.SYMMETRY_ORDER
+                self.agent_orientations[agent_id] %= self.space.SYMMETRY_ORDER
 
         obss = self.observations
         rewards = self.rewards

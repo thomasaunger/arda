@@ -19,23 +19,23 @@ def generate_tag_env_rollout_animation(
         assert trainer is not None
 
         episode_states = trainer.fetch_episode_states(
-            ["loc_y", "loc_x", "orientations", "goal_location", "rewards"]
+            ["loc_y", "loc_x", "orientations", "goal_point", "rewards"]
         )
         assert isinstance(episode_states, dict)
         env = trainer.cuda_envs.env
 
-        surface_length = env.surface.length
+        space_length = env.space.length
         num_agents = env.num_agents
         episode_length = env.episode_length
     else:
-        surface_length = 8
+        space_length = 8
         num_agents = 2
         episode_length = 64
         episode_states = {
-            "loc_y":         np.random.randint(surface_length, size=(episode_length, num_agents)),
-            "loc_x":         np.random.randint(surface_length, size=(episode_length, num_agents)),
+            "loc_y":         np.random.randint(space_length, size=(episode_length, num_agents)),
+            "loc_x":         np.random.randint(space_length, size=(episode_length, num_agents)),
             "orientations":  np.random.randint(          4, size=(episode_length, num_agents)),
-            "goal_location": np.random.randint(surface_length, size=(episode_length,          2)),
+            "goal_point": np.random.randint(space_length, size=(episode_length,          2)),
         }
 
     fig, ax = plt.subplots(
@@ -45,15 +45,15 @@ def generate_tag_env_rollout_animation(
     ax = fig.add_subplot(1, 1, 1, projection="3d")
 
     # Bounds
-    ax.set_xlim(0.0, surface_length)
-    ax.set_ylim(0.0, surface_length)
+    ax.set_xlim(0.0, space_length)
+    ax.set_ylim(0.0, space_length)
     ax.set_zlim(-1.0, 1.0)
 
-    # Surface
-    for x in range(surface_length):
-        for y in range(surface_length):
+    # Space
+    for x in range(space_length):
+        for y in range(space_length):
             corner_points = [(x, y), (x, y + 1), (x + 1, y + 1), (x + 1, y)]
-            color = goal_color if episode_states["goal_location"][0, 1] == x and episode_states["goal_location"][0, 0] == y else (0.1, 0.2, 0.5, 0.15)
+            color = goal_color if episode_states["goal_point"][0, 1] == x and episode_states["goal_point"][0, 0] == y else (0.1, 0.2, 0.5, 0.15)
             poly = Polygon(corner_points, color=color)
             ax.add_patch(poly)
             art3d.pathpatch_2d_to_3d(poly, z=-0, zdir="z")

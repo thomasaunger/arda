@@ -20,7 +20,7 @@ HALTING = False
 
 
 # Create an instance of the Seen environment
-world = Realm(num_agents=1, surface_length=4)
+world = Realm(num_agents=1, space_length=4)
 obs = world.reset()
 world.observation_space = recursive_obs_dict_to_spaces_dict(obs)
 len_str_episode_length = len(str(world.episode_length))
