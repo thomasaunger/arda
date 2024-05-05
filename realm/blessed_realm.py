@@ -44,29 +44,29 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
             obss[agent_id] = np.concatenate(
                 [
                     # np.array([agent_id + 2], dtype=self.float_dtype),
-                    # np.rot90(space, k=self.agent_orientations[agent_id]).reshape(-1),
-                    # (self.agent_orientations - self.agent_orientations[agent_id]) % self.space.SYMMETRY_ORDER,
+                    # np.rot90(space, k=self.space.agent_orientations[agent_id]).reshape(-1),
+                    # (self.space.agent_orientations - self.space.agent_orientations[agent_id]) % self.space.SYMMETRY_ORDER,
                     self.space.rotate_coordinates(
                         np.array(
-                            self.agent_points[agent_id],
+                            self.space.agent_points[agent_id],
                             dtype=self.float_dtype,
                         ),
-                        self.agent_orientations[agent_id]
+                        self.space.agent_orientations[agent_id]
                     ),
                     self.space.rotate_coordinates(
                         np.array(
                             self.goal_point,
                             dtype=self.float_dtype,
                             ),
-                        self.agent_orientations[agent_id]
+                        self.space.agent_orientations[agent_id]
                     ) - self.space.rotate_coordinates(
                         np.array(
-                            self.agent_points[agent_id],
+                            self.space.agent_points[agent_id],
                             dtype=self.float_dtype,
                         ),
-                        self.agent_orientations[agent_id]
+                        self.space.agent_orientations[agent_id]
                     ),
-                    self.agent_orientations[agent_id].reshape(-1),
+                    self.space.agent_orientations[agent_id].reshape(-1),
                 ], dtype=self.float_dtype
             )
 
@@ -101,19 +101,19 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         for coordinate in range(self.space.NUM_COORDINATES):
             data_dict.add_data(
                 name=self.coordinate_name(coordinate),
-                data=np.ascontiguousarray(self.agent_points[:, coordinate]),
+                data=np.ascontiguousarray(self.space.agent_points[:, coordinate]),
                 save_copy_and_apply_at_reset=False,
                 log_data_across_episode=True,
             )
         data_dict.add_data(
             name=_ORIENTATIONS,
-            data=self.agent_orientations,
+            data=self.space.agent_orientations,
             save_copy_and_apply_at_reset=False,
             log_data_across_episode=True,
         )
         data_dict.add_data(
             name="agent_types",
-            data=self.registry.agent_types,
+            data=self.space.agent_types,
         )
         data_dict.add_data(
             name="goal_point",

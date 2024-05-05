@@ -1,15 +1,18 @@
 import numpy as np
 
-from . import Agent
+from ... import Agent
 
 
-class Registry:
+class Space:
     
-    def __init__(self, num_agents, num_powers, np_random, int_dtype):
-        self.np_random = np_random
-        self.int_dtype = int_dtype
+    def __init__(self, int_dtype, np_random, length, num_agents, num_powers):
+        assert length >= 0, "Space length must be non-negative"
 
-        self._agent_types = np.zeros(num_agents, dtype=self.int_dtype)
+        self._int_dtype = int_dtype
+        self._np_random = np_random
+        self._length    = length
+
+        self._agent_types = np.zeros(num_agents, dtype=self._int_dtype)
 
         agent_ids = np.arange(num_agents, dtype=self.int_dtype)
         powers = self.np_random.choice(
@@ -19,7 +22,19 @@ class Registry:
 
         self._agent_types[powers] = Agent.POWER
         self._agent_types[angels] = Agent.ANGEL
-
+    
+    @property
+    def int_dtype(self):
+        return self._int_dtype
+    
+    @property
+    def np_random(self):
+        return self._np_random
+    
+    @property
+    def length(self):
+        return self._length
+    
     @property
     def agent_types(self):
         return self._agent_types

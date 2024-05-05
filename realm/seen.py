@@ -33,10 +33,10 @@ class Seen(Realm):
         y_offset = (self.screen.get_height() - self.space._space.shape[COORDINATE_Y]*CELL_LENGTH_Y)//2
         x_offset = (self.screen.get_width()  - self.space._space.shape[COORDINATE_X]*CELL_LENGTH_X)//2
 
-        y = self.agent_points[agent_id][COORDINATE_Y]
-        x = self.agent_points[agent_id][COORDINATE_X]
+        y = self.space.agent_points[agent_id][COORDINATE_Y]
+        x = self.space.agent_points[agent_id][COORDINATE_X]
 
-        match self.agent_orientations[agent_id]:
+        match self.space.agent_orientations[agent_id]:
             case self.space.NORTH:
                 return [
                     (x_offset +  x     *CELL_LENGTH_X + MARGIN,           y_offset + (y + 1)*CELL_LENGTH_Y - MARGIN),
@@ -71,12 +71,12 @@ class Seen(Realm):
 
         # Draw the agents
         for agent_id in range(self.num_agents):
-            if self.registry.agent_types[agent_id] == Agent.ANGEL:
+            if self.space.agent_types[agent_id] == Agent.ANGEL:
                 color = (255, 0, 0)
             else:
                 color = (0, 0, 255)
-            y = y_offset + self.agent_points[agent_id][COORDINATE_Y]*CELL_LENGTH_Y
-            x = x_offset + self.agent_points[agent_id][COORDINATE_X]*CELL_LENGTH_X
+            y = y_offset + self.space.agent_points[agent_id][COORDINATE_Y]*CELL_LENGTH_Y
+            x = x_offset + self.space.agent_points[agent_id][COORDINATE_X]*CELL_LENGTH_X
             pg.draw.polygon(
                 self.screen,
                 color,

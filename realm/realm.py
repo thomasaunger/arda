@@ -1,7 +1,6 @@
 import gym
 import numpy as np
 
-from .utils import Registry
 from .utils.tilings import SquareTiling
 
 
@@ -51,12 +50,10 @@ class Realm(gym.Env):
         self.episode_length = episode_length
 
         # Create space
-        self.space = SquareTiling(space_length, self.np_random, self.int_dtype)
+        self.space = SquareTiling(self.int_dtype, self.np_random, space_length, num_agents, num_powers)
 
         # Ensure that there is enough space for all agents and the goal
         assert num_agents < self.space.volume
-
-        self.registry = Registry(num_agents, num_powers, self.np_random, self.int_dtype)
 
         self.marred = marred
 
@@ -74,7 +71,7 @@ class Realm(gym.Env):
     
     @property
     def num_agents(self):
-        return self.registry.num_agents
+        return self.space.num_agents
     
     @property
     def observations(self):
@@ -92,30 +89,14 @@ class Realm(gym.Env):
         """
         self.np_random.seed(seed)
         return [seed]
-    
-    def _get_unoccupied_point(self, points):
-        while True:
-            point = self.space.random_coordinates()
-            if not np.any(np.all(point == points, axis=1)):
-                return point
-    
-    def _occupied(self, point):
-        return 0 < self.space._space[tuple(point.T)]
 
     def reset(self):
         # Reset the environment to its initial state
         self.space._space.fill(0)
 
-        self.agent_points = np.zeros((0, 2), dtype=self.int_dtype)
-        for _ in range(self.num_agents):
-            point = self._get_unoccupied_point(self.agent_points)
-            self.agent_points = np.vstack([self.agent_points, point])
-        
-        self.goal_point = self._get_unoccupied_point(self.agent_points)
-        
-        self.agent_orientations = self.np_random.randint(self.space.SYMMETRY_ORDER, size=self.num_agents, dtype=self.int_dtype)
+        self.goal_point = self.space.get_unoccupied_point(self.space.agent_points)
 
-        self.space._space[tuple(self.agent_points.T)] = np.arange(self.num_agents, dtype=self.int_dtype) + 2
+        self.space._space[tuple(self.space.agent_points.T)] = np.arange(self.num_agents, dtype=self.int_dtype) + 2
 
         self.goal_reached = np.array([False]*self.num_agents, dtype=self.int_dtype)
 
@@ -139,32 +120,32 @@ class Realm(gym.Env):
             if 0 < action[Realm.MOVE]:
                 match action[Realm.MOVE]:
                     case Realm.FORWARD:
-                        delta = self.space.delta(self.agent_orientations[agent_id])
+                        delta = self.space.delta(self.space.agent_orientations[agent_id])
                         self.first_action[agent_id] = False
                         
-                        new_point = np.clip(self.agent_points[agent_id] + delta, 0, np.array(self.space._space.shape) - 1, dtype=self.int_dtype)
+                        new_point = np.clip(self.space.agent_points[agent_id] + delta, 0, np.array(self.space._space.shape) - 1, dtype=self.int_dtype)
 
                         if np.all(new_point == self.goal_point):
                             self.goal_reached[agent_id] = True
-                        elif True:  # not self._occupied(new_point):
-                            self.space._space[tuple(self.agent_points[agent_id].T)] = 0
+                        elif True:  # not self.occupied(new_point):
+                            self.space._space[tuple(self.space.agent_points[agent_id].T)] = 0
                             self.space._space[tuple(new_point.T)] = agent_id + 2
-                            self.agent_points[agent_id] = new_point
+                            self.space.agent_points[agent_id] = new_point
                             self.last_move_legal[agent_id] = True
                         else:    
                             self.last_move_legal[agent_id] = False
             else:
                 match action[Realm.TURN]:
                     case Realm.LEFT:
-                        self.agent_orientations[agent_id] -= 1
+                        self.space.agent_orientations[agent_id] -= 1
                         self.last_move_legal[agent_id] = True
                         self.first_action[agent_id] = False
                     case Realm.RIGHT:
-                        self.agent_orientations[agent_id] += 1
+                        self.space.agent_orientations[agent_id] += 1
                         self.last_move_legal[agent_id] = True
                         self.first_action[agent_id] = False
                 
-                self.agent_orientations[agent_id] %= self.space.SYMMETRY_ORDER
+                self.space.agent_orientations[agent_id] %= self.space.SYMMETRY_ORDER
 
         obss = self.observations
         rewards = self.rewards
