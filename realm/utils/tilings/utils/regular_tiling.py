@@ -33,12 +33,12 @@ class RegularTiling(Space):
     def agent_orientations(self):
         return self._agent_orientations
 
-    def random_coordinates(self):
+    def _random_coordinates(self):
         return np.array([self.np_random.randint(shape, dtype=self.int_dtype) for shape in self._space.shape], dtype=self.int_dtype)
     
     def get_unoccupied_point(self, points):
         while True:
-            point = self.random_coordinates()
+            point = self._random_coordinates()
             if not np.any(np.all(point == points, axis=1)):
                 return point
     
