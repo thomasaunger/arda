@@ -53,7 +53,7 @@ class Realm(gym.Env):
         self.space = SquareTiling(self.int_dtype, self.np_random, space_length, num_agents, num_powers)
 
         # Ensure that there is enough space for all agents and the goal
-        assert num_agents < self.space.volume
+        assert self.num_agents < self.space.volume
 
         self.marred = marred
 
