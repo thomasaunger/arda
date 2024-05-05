@@ -92,11 +92,9 @@ class Realm(gym.Env):
 
     def reset(self):
         # Reset the environment to its initial state
-        self.space._space.fill(0)
+        self.space.reset()
 
         self.goal_point = self.space.get_unoccupied_point(self.space.agent_points)
-
-        self.space._space[tuple(self.space.agent_points.T)] = np.arange(self.num_agents, dtype=self.int_dtype) + 2
 
         self.goal_reached = np.array([False]*self.num_agents, dtype=self.int_dtype)
 

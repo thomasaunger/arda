@@ -10,12 +10,7 @@ class RegularTiling(Space):
         
         self._space = np.zeros((self.length,)*self.NUM_COORDINATES, dtype=self.int_dtype)
 
-        self._agent_points = np.zeros((0, 2), dtype=self.int_dtype)
-        for _ in range(self.num_agents):
-            point = self.get_unoccupied_point(self.agent_points)
-            self._agent_points = np.vstack([self.agent_points, point])
-
-        self._agent_orientations = self.np_random.randint(self.SYMMETRY_ORDER, size=self.num_agents, dtype=self.int_dtype)
+        self._agent_points = np.zeros((self.num_agents, 2), dtype=self.int_dtype)
     
     @property
     def SYMMETRY_ORDER(self):
@@ -44,3 +39,14 @@ class RegularTiling(Space):
     
     def occupied(self, point):
         return 0 < self._space[tuple(point.T)]
+
+    def reset(self):
+        self._space.fill(0)
+
+        for i in range(self.num_agents):
+            point = self.get_unoccupied_point(self.agent_points)
+            self._agent_points = np.vstack([self.agent_points[:i], point])
+
+        self._space[tuple(self.agent_points.T)] = np.arange(self.num_agents, dtype=self.int_dtype) + 2
+
+        self._agent_orientations = self.np_random.randint(self.SYMMETRY_ORDER, size=self.num_agents, dtype=self.int_dtype)
