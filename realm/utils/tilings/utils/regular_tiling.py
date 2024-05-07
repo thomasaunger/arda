@@ -44,8 +44,11 @@ class RegularTiling(Space):
         self._space.fill(0)
 
         for i in range(self.num_agents):
-            point = self.get_unoccupied_point()
-            self._agent_points = np.vstack([self.agent_points[:i], point])
+            while True:
+                point = self._random_coordinates()
+                if not np.any(np.all(point == self.agent_points[:i], axis=1)):
+                    break
+            self._agent_points[i] = point
 
         self._space[tuple(self.agent_points.T)] = np.arange(self.num_agents, dtype=self.int_dtype) + 2
 
