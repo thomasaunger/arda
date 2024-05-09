@@ -28,8 +28,8 @@ class Seen(Realm):
         pg.display.set_caption("Realm")
 
     def _agent_image(self, agent_id):
-        y_offset = (self.screen.get_height() - self.space._space.shape[COORDINATE_Y]*CELL_LENGTH_Y)//2
-        x_offset = (self.screen.get_width()  - self.space._space.shape[COORDINATE_X]*CELL_LENGTH_X)//2
+        y_offset = (self.screen.get_height() - self.space.array.shape[COORDINATE_Y]*CELL_LENGTH_Y)//2
+        x_offset = (self.screen.get_width()  - self.space.array.shape[COORDINATE_X]*CELL_LENGTH_X)//2
 
         y = self.space.agent_points[agent_id][COORDINATE_Y]
         x = self.space.agent_points[agent_id][COORDINATE_X]
@@ -64,8 +64,8 @@ class Seen(Realm):
         # Render the environment
         self.screen.fill((0, 0, 0))  # Fill the screen with black color
 
-        y_offset = (self.screen.get_height() - self.space._space.shape[COORDINATE_Y]*CELL_LENGTH_Y)//2
-        x_offset = (self.screen.get_width()  - self.space._space.shape[COORDINATE_X]*CELL_LENGTH_X)//2
+        y_offset = (self.screen.get_height() - self.space.array.shape[COORDINATE_Y]*CELL_LENGTH_Y)//2
+        x_offset = (self.screen.get_width()  - self.space.array.shape[COORDINATE_X]*CELL_LENGTH_X)//2
 
         # Draw the agents
         for agent_id in range(self.num_agents):
@@ -96,12 +96,12 @@ class Seen(Realm):
         )
 
         # Draw the space
-        for m in range(self.space._space.shape[COORDINATE_Y] + 1):
+        for m in range(self.space.array.shape[COORDINATE_Y] + 1):
             y = y_offset + m*CELL_LENGTH_Y
-            pg.draw.line(self.screen, (255, 255, 255), (x_offset, y), (x_offset + self.space._space.shape[COORDINATE_Y]*CELL_LENGTH_X, y))
+            pg.draw.line(self.screen, (255, 255, 255), (x_offset, y), (x_offset + self.space.array.shape[COORDINATE_Y]*CELL_LENGTH_X, y))
 
-        for n in range(self.space._space.shape[COORDINATE_X] + 1):
+        for n in range(self.space.array.shape[COORDINATE_X] + 1):
             x = x_offset + n*CELL_LENGTH_X
-            pg.draw.line(self.screen, (255, 255, 255), (x, y_offset), (x, y_offset + self.space._space.shape[COORDINATE_X]*CELL_LENGTH_Y))
+            pg.draw.line(self.screen, (255, 255, 255), (x, y_offset), (x, y_offset + self.space.array.shape[COORDINATE_X]*CELL_LENGTH_Y))
 
         pg.display.flip()  # Update the display

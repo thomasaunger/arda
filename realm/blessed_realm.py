@@ -35,7 +35,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         """
         obss = {}
 
-        space = self.space._space.copy()
+        space = self.space.array.copy()
 
         # add goal point to the space
         space[tuple(self.goal_point.T)] = 1
