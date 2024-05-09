@@ -18,7 +18,7 @@ class Space:
         powers = self.np_random.choice(
             agent_ids, num_powers, replace=False
         )
-        angels = np.setdiff1d(agent_ids, self.powers)
+        angels = np.setdiff1d(agent_ids, powers)
 
         self._agent_types[powers] = Agent.POWER
         self._agent_types[angels] = Agent.ANGEL
