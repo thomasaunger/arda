@@ -43,9 +43,6 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         for agent_id in range(self.num_agents):
             obss[agent_id] = np.concatenate(
                 [
-                    # np.array([agent_id + 2], dtype=self.float_dtype),
-                    # np.rot90(space, k=self.space.agent_orientations[agent_id]).reshape(-1),
-                    # (self.space.agent_orientations - self.space.agent_orientations[agent_id]) % self.space.SYMMETRY_ORDER,
                     self.space.rotate_coordinates(
                         np.array(
                             self.space.agent_points[agent_id],
@@ -79,7 +76,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         """
         return self.goal_reached*(1.0 - self.time_step/self.episode_length)
     
-    def coordinate_name(self, coordinate):
+    def _coordinate_name(self, coordinate):
         """
         Return the coordinate name for the given coordinate
         """
@@ -100,7 +97,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         )
         for coordinate in range(self.space.NUM_COORDINATES):
             data_dict.add_data(
-                name=self.coordinate_name(coordinate),
+                name=self._coordinate_name(coordinate),
                 data=np.ascontiguousarray(self.space.agent_points[:, coordinate]),
                 save_copy_and_apply_at_reset=False,
                 log_data_across_episode=True,
@@ -133,7 +130,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
             args = [
                 "marred",
                 "space_length",
-                *[self.coordinate_name(coordinate) for coordinate in range(self.space.NUM_COORDINATES)],
+                *[self._coordinate_name(coordinate) for coordinate in range(self.space.NUM_COORDINATES)],
                 _ORIENTATIONS,
                 "agent_types",
                 "goal_point",

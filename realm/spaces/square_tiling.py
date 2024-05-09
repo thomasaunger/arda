@@ -8,10 +8,26 @@ class SquareTiling(RegularTiling):
     _SYMMETRY_ORDER = 4
     _NUM_COORDINATES = 2
 
-    NORTH = 0
-    EAST  = 1
-    SOUTH = 2
-    WEST  = 3
+    _NORTH = 0
+    _EAST  = 1
+    _SOUTH = 2
+    _WEST  = 3
+
+    @property
+    def NORTH(self):
+        return self._NORTH
+    
+    @property
+    def EAST(self):
+        return self._EAST
+    
+    @property
+    def SOUTH(self):
+        return self._SOUTH
+    
+    @property
+    def WEST(self):
+        return self._WEST
 
     @property
     def volume(self):

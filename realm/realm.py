@@ -39,36 +39,64 @@ class Realm(gym.Env):
             seed=None,
     ):
         # Data types
-        self.float_dtype = np.float32
-        self.int_dtype = np.int32
+        self._float_dtype = np.float32
+        self._int_dtype = np.int32
 
         # Seeding
-        self.np_random = np.random
+        self._np_random = np.random
         if seed is not None:
             self._seed(seed)
         
         assert episode_length > 0
-        self.episode_length = episode_length
+        self._episode_length = episode_length
 
         # Create space
-        self.space = SquareTiling(self.int_dtype, self.np_random, space_length, Agent, num_agents, num_powers)
+        self._space = SquareTiling(self.int_dtype, self.np_random, space_length, Agent, num_agents, num_powers)
 
         # Ensure that there is enough space for all agents and the goal
         assert self.num_agents < self.space.volume
 
-        self.marred = marred
+        self._marred = marred
 
         # Define observation and action spaces
         self.observation_space = None  # Note: this will be set via the env_wrapper
-        self.action_space = {
+        self._action_space = {
             agent_id: gym.spaces.MultiDiscrete(
                 tuple([len(action) for action in Realm.actions.values()])
             ) for agent_id in range(self.num_agents)
         }
     
     @property
+    def float_dtype(self):
+        return self._float_dtype
+    
+    @property
+    def int_dtype(self):
+        return self._int_dtype
+    
+    @property
+    def np_random(self):
+        return self._np_random
+    
+    @property
+    def episode_length(self):
+        return self._episode_length
+    
+    @property
+    def space(self):
+        return self._space
+
+    @property
     def num_agents(self):
         return self.space.num_agents
+    
+    @property
+    def marred(self):
+        return self._marred
+    
+    @property
+    def action_space(self):
+        return self._action_space
     
     @property
     def goal_reached(self):
