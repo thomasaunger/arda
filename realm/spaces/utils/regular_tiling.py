@@ -5,8 +5,8 @@ from .space import Space
 
 class RegularTiling(Space):
     
-    def __init__(self, int_dtype, np_random, length, num_agents, num_powers):
-        super().__init__(int_dtype, np_random, length, num_agents, num_powers)
+    def __init__(self, int_dtype, np_random, length, agent_class, num_agents, num_powers):
+        super().__init__(int_dtype, np_random, length, agent_class, num_agents, num_powers)
         
         self._space = np.zeros((self.length,)*self.NUM_COORDINATES, dtype=self.int_dtype)
 

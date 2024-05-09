@@ -1,7 +1,8 @@
 import gym
 import numpy as np
 
-from .utils.tilings import SquareTiling
+from .agents import Agent
+from .spaces import SquareTiling
 
 
 class Realm(gym.Env):
@@ -50,7 +51,7 @@ class Realm(gym.Env):
         self.episode_length = episode_length
 
         # Create space
-        self.space = SquareTiling(self.int_dtype, self.np_random, space_length, num_agents, num_powers)
+        self.space = SquareTiling(self.int_dtype, self.np_random, space_length, Agent, num_agents, num_powers)
 
         # Ensure that there is enough space for all agents and the goal
         assert self.num_agents < self.space.volume
