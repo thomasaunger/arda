@@ -143,10 +143,9 @@ class Realm(gym.Env):
                         
                         new_point = np.clip(self.space.agent_points[agent_id] + delta, 0, np.array(self.space.array.shape) - 1, dtype=self.int_dtype)
 
-                        if True:  # not self.occupied(new_point):
-                            self.space.array[tuple(self.space.agent_points[agent_id].T)] = 0
-                            self.space.array[tuple(new_point.T)] = agent_id + 2
-                            self.space.agent_points[agent_id] = new_point
+                        self.space.array[tuple(self.space.agent_points[agent_id].T)] = 0
+                        self.space.array[tuple(new_point.T)] = agent_id + 2
+                        self.space.agent_points[agent_id] = new_point
             else:
                 match action[Realm.TURN]:
                     case Realm.LEFT:
