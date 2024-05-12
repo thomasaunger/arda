@@ -10,7 +10,7 @@ class RegularTiling(Space):
         
         self._array = np.zeros((self.length,)*self.NUM_COORDINATES, dtype=self.int_dtype)
 
-        self._agent_points = np.zeros((self.num_agents, 2), dtype=self.int_dtype)
+        self._agent_points = np.zeros((self.num_agents, self.NUM_COORDINATES), dtype=self.int_dtype)
     
     @property
     def SYMMETRY_ORDER(self):
