@@ -36,7 +36,7 @@ class SquareTiling(RegularTiling):
     def rotate_coordinates(self, coordinates, orientation):
         """
         Rotate the coordinates based on orientation
-        """        
+        """
         new_coordinates = coordinates.copy()
         for _ in range(orientation):
             new_coordinates = np.array([self.length - 1, 0], dtype=self.int_dtype) + np.array(
