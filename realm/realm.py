@@ -7,28 +7,6 @@ from .spaces import SquareTiling as Space
 
 class Realm(gym.Env):
 
-    TURN = 0
-    MOVE = 1
-
-    NONE = 0
-    
-    LEFT = 1
-    RIGHT = 2
-
-    FORWARD = 1
-
-    actions = {
-        TURN: {
-            "NONE":  NONE,
-            "LEFT":  LEFT,
-            "RIGHT": RIGHT,
-        },
-        MOVE: {
-            "NONE":    NONE,
-            "FORWARD": FORWARD,
-        },
-    }
-
     def __init__(
             self,
             marred=False,
@@ -62,7 +40,7 @@ class Realm(gym.Env):
         self.observation_space = None  # Note: this will be set via the env_wrapper
         self._action_space = {
             agent_id: gym.spaces.MultiDiscrete(
-                tuple([len(action) for action in Realm.actions.values()])
+                tuple([len(action) for action in self.space.agent_class.actions.values()])
             ) for agent_id in range(self.num_agents)
         }
     
@@ -135,25 +113,7 @@ class Realm(gym.Env):
         assert isinstance(actions, dict)
         assert len(actions) == self.num_agents
 
-        for agent_id, action in actions.items():
-            if 0 < action[Realm.MOVE]:
-                match action[Realm.MOVE]:
-                    case Realm.FORWARD:
-                        delta = self.space.delta(self.space.agent_orientations[agent_id])
-                        
-                        new_point = np.clip(self.space.agent_points[agent_id] + delta, 0, np.array(self.space.array.shape) - 1, dtype=self.int_dtype)
-
-                        self.space.array[tuple(self.space.agent_points[agent_id].T)] = 0
-                        self.space.array[tuple(new_point.T)] = agent_id + 2
-                        self.space.agent_points[agent_id] = new_point
-            else:
-                match action[Realm.TURN]:
-                    case Realm.LEFT:
-                        self.space.agent_orientations[agent_id] -= 1
-                    case Realm.RIGHT:
-                        self.space.agent_orientations[agent_id] += 1
-                
-                self.space.agent_orientations[agent_id] %= self.space.SYMMETRY_ORDER
+        self.space.step(np.vstack(tuple(actions.values())))
 
         obss = self.observations
         rewards = self.rewards

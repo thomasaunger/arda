@@ -57,3 +57,24 @@ class RegularTiling(Space):
         self.array[tuple(self.agent_points.T)] = np.arange(self.num_agents, dtype=self.int_dtype) + 2
 
         self._agent_orientations = self.np_random.randint(self.SYMMETRY_ORDER, size=self.num_agents, dtype=self.int_dtype)
+
+    def step(self, actions):
+        for agent_id, action in enumerate(actions):
+            if 0 < action[self.agent_class.MOVE]:
+                match action[self.agent_class.MOVE]:
+                    case self.agent_class.FORWARD:
+                        delta = self.delta(self.agent_orientations[agent_id])
+                        
+                        new_point = np.clip(self.agent_points[agent_id] + delta, 0, np.array(self.array.shape) - 1, dtype=self.int_dtype)
+
+                        self.array[tuple(self.agent_points[agent_id].T)] = 0
+                        self.array[tuple(new_point.T)] = agent_id + 2
+                        self.agent_points[agent_id] = new_point
+            else:
+                match action[self.agent_class.TURN]:
+                    case self.agent_class.LEFT:
+                        self.agent_orientations[agent_id] -= 1
+                    case self.agent_class.RIGHT:
+                        self.agent_orientations[agent_id] += 1
+                
+                self.agent_orientations[agent_id] %= self.SYMMETRY_ORDER
