@@ -36,31 +36,27 @@ class SquareTiling(RegularTiling):
     def rotate_coordinates(self, coordinates, orientation):
         """
         Rotate the coordinates based on orientation
-        """
-        # TODO: implement using matrix multiplication
-        k = self.length - 1
-        y = coordinates[0]
-        x = coordinates[1]
-        match orientation:
-            case self.NORTH:
-                return coordinates.copy()
-            case self.EAST:
-                return np.array([k - x, y    ], dtype=self.int_dtype)
-            case self.SOUTH:
-                return np.array([k - y, k - x], dtype=self.int_dtype)
-            case self.WEST:
-                return np.array([x,     k - y], dtype=self.int_dtype)
+        """        
+        new_coordinates = coordinates.copy()
+        for _ in range(orientation):
+            new_coordinates = np.array([self.length - 1, 0], dtype=self.int_dtype) + np.array(
+                [
+                    [0, -1],
+                    [1,  0]
+                ], dtype=self.int_dtype
+            ).dot(new_coordinates)
+        return new_coordinates
 
     def delta(self, orientation):
         """
         Return one-step delta vector based on orientation
         """
-        match orientation:
-            case self.NORTH:
-                return np.array([-1, 0], dtype=self.int_dtype)
-            case self.EAST:
-                return np.array([ 0, 1], dtype=self.int_dtype)
-            case self.SOUTH:
-                return np.array([ 1, 0], dtype=self.int_dtype)
-            case self.WEST:
-                return np.array([0, -1], dtype=self.int_dtype)
+        delta = np.array([-1, 0])
+        for _ in range(orientation):
+            delta = np.array(
+                [
+                    [ 0, 1],
+                    [-1, 0]
+                ], dtype=self.int_dtype
+            ).dot(delta)
+        return delta
