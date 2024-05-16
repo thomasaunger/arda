@@ -1,4 +1,4 @@
-__constant__ int NUM_COORDINATES = 2;
+__constant__ int DIMS = 2;
 
 __constant__ int SYMMETRY_ORDER = 4;
 
@@ -113,8 +113,8 @@ extern "C" {
       rewards_arr[kThisAgentArrayIdx] = 0.0;
 
       // Check whether the agent has reached the goal
-      if (loc_y_arr[kThisAgentArrayIdx] == goal_point_arr[kEnvId * NUM_COORDINATES    ] &&
-          loc_x_arr[kThisAgentArrayIdx] == goal_point_arr[kEnvId * NUM_COORDINATES + 1]) {
+      if (loc_y_arr[kThisAgentArrayIdx] == goal_point_arr[kEnvId * DIMS    ] &&
+          loc_x_arr[kThisAgentArrayIdx] == goal_point_arr[kEnvId * DIMS + 1]) {
         rewards_arr[kThisAgentArrayIdx] = 1.0 * (1.0 - env_timestep_arr[kEnvId] / float(kEpisodeLength));
         // done_arr[kEnvId] = 1;
       }
@@ -191,8 +191,8 @@ extern "C" {
           &loc_y,
           &loc_x
         );
-        goal_point_arr[kEnvId * NUM_COORDINATES    ] = loc_y;
-        goal_point_arr[kEnvId * NUM_COORDINATES + 1] = loc_x;
+        goal_point_arr[kEnvId * DIMS    ] = loc_y;
+        goal_point_arr[kEnvId * DIMS + 1] = loc_x;
 
         // Reset agent orientations
         for (int kAgentId = 0; kAgentId < kNumAgents; kAgentId++) {
@@ -210,8 +210,8 @@ extern "C" {
       obs_arr[kThisAgentIdxOffset    ] = loc_y;
       obs_arr[kThisAgentIdxOffset + 1] = loc_x;
 
-      loc_y = goal_point_arr[kEnvId * NUM_COORDINATES    ];
-      loc_x = goal_point_arr[kEnvId * NUM_COORDINATES + 1];
+      loc_y = goal_point_arr[kEnvId * DIMS    ];
+      loc_x = goal_point_arr[kEnvId * DIMS + 1];
       RotateCoordinates(kSpaceLength, orientation_arr[kThisAgentArrayIdx], &loc_y, &loc_x);
       obs_arr[kThisAgentIdxOffset + 2] = loc_y - obs_arr[kThisAgentIdxOffset    ];
       obs_arr[kThisAgentIdxOffset + 3] = loc_x - obs_arr[kThisAgentIdxOffset + 1];

@@ -80,7 +80,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         """
         Return the coordinate name for the given coordinate
         """
-        return _LOC_ + chr(ord('a') + (self.space.NUM_COORDINATES + ord('x') - 1 - coordinate - ord('a')) % 26)
+        return _LOC_ + chr(ord('a') + (self.space.dims + ord('x') - 1 - coordinate - ord('a')) % 26)
 
     def get_data_dictionary(self):
         """
@@ -95,7 +95,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
             name="space_length",
             data=self.space.length,
         )
-        for coordinate in range(self.space.NUM_COORDINATES):
+        for coordinate in range(self.space.dims):
             data_dict.add_data(
                 name=self._coordinate_name(coordinate),
                 data=np.ascontiguousarray(self.space.agent_points[:, coordinate]),
@@ -130,7 +130,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
             args = [
                 "marred",
                 "space_length",
-                *[self._coordinate_name(coordinate) for coordinate in range(self.space.NUM_COORDINATES)],
+                *[self._coordinate_name(coordinate) for coordinate in range(self.space.dims)],
                 _ORIENTATIONS,
                 "agent_types",
                 "goal_point",

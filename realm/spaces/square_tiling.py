@@ -1,12 +1,11 @@
 import numpy as np
 
-from .utils import RegularTiling
+from .utils import RegularTiling, Rotation
 
 
 class SquareTiling(RegularTiling):
     
     _SYMMETRY_ORDER = 4
-    _NUM_COORDINATES = 2
 
     _NORTH = 0
     _EAST  = 1
@@ -28,6 +27,21 @@ class SquareTiling(RegularTiling):
     @property
     def WEST(self):
         return self._WEST
+    
+    @property
+    def principal_orientation(self):
+        return np.array([-1, 0], dtype=self.int_dtype)
+    
+    @property
+    def R(self):
+        return super().R(
+            np.array(
+                [
+                    [ 0, 1],
+                    [-1, 0]
+                ], dtype=self.int_dtype
+            )
+        )
 
     @property
     def volume(self):
@@ -39,24 +53,5 @@ class SquareTiling(RegularTiling):
         """
         new_coordinates = coordinates.copy()
         for _ in range(orientation):
-            new_coordinates = np.array([self.length - 1, 0], dtype=self.int_dtype) + np.array(
-                [
-                    [0, -1],
-                    [1,  0]
-                ], dtype=self.int_dtype
-            ).dot(new_coordinates)
+            new_coordinates = np.array([self.length - 1, 0], dtype=self.int_dtype) + self.L.dot(new_coordinates)
         return new_coordinates
-
-    def delta(self, orientation):
-        """
-        Return one-step delta vector based on orientation
-        """
-        delta = np.array([-1, 0])
-        for _ in range(orientation):
-            delta = np.array(
-                [
-                    [ 0, 1],
-                    [-1, 0]
-                ], dtype=self.int_dtype
-            ).dot(delta)
-        return delta

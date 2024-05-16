@@ -1,24 +1,27 @@
 import numpy as np
 
 from .space import Space
+from .rotation import Rotation
 
 
 class RegularTiling(Space):
     
     def __init__(self, int_dtype, np_random, length, agent_class, num_agents, num_powers):
         super().__init__(int_dtype, np_random, length, agent_class, num_agents, num_powers)
-        
-        self._array = np.zeros((self.length,)*self.NUM_COORDINATES, dtype=self.int_dtype)
 
-        self._agent_points = np.zeros((self.num_agents, self.NUM_COORDINATES), dtype=self.int_dtype)
+        self._dims = len(self.R)
+        
+        self._array = np.zeros((self.length,)*self.dims, dtype=self.int_dtype)
+
+        self._agent_points = np.zeros((self.num_agents, self.dims), dtype=self.int_dtype)
     
     @property
     def SYMMETRY_ORDER(self):
         return self._SYMMETRY_ORDER
     
     @property
-    def NUM_COORDINATES(self):
-        return self._NUM_COORDINATES
+    def dims(self):
+        return self._dims
     
     @property
     def array(self):
@@ -31,6 +34,13 @@ class RegularTiling(Space):
     @property
     def agent_orientations(self):
         return self._agent_orientations
+    
+    @property
+    def L(self):
+        return Rotation(self.R.pow(-1), self.SYMMETRY_ORDER)
+    
+    def R(self, matrix):
+        return Rotation(matrix, self.SYMMETRY_ORDER)
 
     def _random_coordinates(self):
         return np.array([self.np_random.randint(shape, dtype=self.int_dtype) for shape in self.array.shape], dtype=self.int_dtype)
@@ -63,18 +73,15 @@ class RegularTiling(Space):
             if 0 < action[self.agent_class.MOVE]:
                 match action[self.agent_class.MOVE]:
                     case self.agent_class.FORWARD:
-                        delta = self.delta(self.agent_orientations[agent_id])
-                        
-                        new_point = np.clip(self.agent_points[agent_id] + delta, 0, np.array(self.array.shape) - 1, dtype=self.int_dtype)
-
                         self.array[tuple(self.agent_points[agent_id].T)] = 0
-                        self.array[tuple(new_point.T)] = agent_id + 2
-                        self.agent_points[agent_id] = new_point
+                        orientation = self.R.pow(self.agent_orientations[agent_id]).dot(self.principal_orientation)
+                        self.agent_points[agent_id] = np.clip(self.agent_points[agent_id] + orientation, 0, np.array(self.array.shape) - 1, dtype=self.int_dtype)
+                        self.array[tuple(self.agent_points[agent_id].T)] = agent_id + 2
             else:
                 match action[self.agent_class.TURN]:
                     case self.agent_class.LEFT:
                         self.agent_orientations[agent_id] -= 1
                     case self.agent_class.RIGHT:
                         self.agent_orientations[agent_id] += 1
-                
-                self.agent_orientations[agent_id] %= self.SYMMETRY_ORDER
+
+            self.agent_orientations[agent_id] %= self.SYMMETRY_ORDER
