@@ -69,7 +69,7 @@ class Seen(Realm):
 
         # Draw the agents
         for agent_id in range(self.num_agents):
-            if self.space.agent_types[agent_id] == self.space.ANGEL:
+            if self.agent_types[agent_id] == self.ANGEL:
                 color = (255, 0, 0)
             else:
                 color = (0, 0, 255)

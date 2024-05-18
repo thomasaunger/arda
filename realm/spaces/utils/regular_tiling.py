@@ -6,8 +6,10 @@ from .rotation import Rotation
 
 class RegularTiling(Space):
     
-    def __init__(self, int_dtype, np_random, length, num_agents, num_powers):
-        super().__init__(int_dtype, np_random, length, num_agents, num_powers)
+    def __init__(self, int_dtype, np_random, length, num_agents):
+        super().__init__(int_dtype, np_random, length)
+
+        self._num_agents = num_agents
 
         self._dims = len(self.principal_orientation)
         
@@ -18,6 +20,10 @@ class RegularTiling(Space):
     @property
     def SYMMETRY_ORDER(self):
         return self._SYMMETRY_ORDER
+    
+    @property
+    def num_agents(self):
+        return self._num_agents
     
     @property
     def dims(self):

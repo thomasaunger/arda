@@ -6,6 +6,9 @@ from .spaces import SquareTiling as Space
 
 class Realm(gym.Env):
 
+    POWER = 0
+    ANGEL = 1
+
     def __init__(
             self,
             marred=False,
@@ -27,8 +30,18 @@ class Realm(gym.Env):
         assert episode_length > 0
         self._episode_length = episode_length
 
+        # Assign agent types
+        self._agent_types = np.zeros(num_agents, dtype=self.int_dtype)
+        agent_ids = np.arange(num_agents, dtype=self.int_dtype)
+        powers = self.np_random.choice(
+            agent_ids, num_powers, replace=False
+        )
+        angels = np.setdiff1d(agent_ids, powers)
+        self._agent_types[powers] = self.POWER
+        self._agent_types[angels] = self.ANGEL
+
         # Create space
-        self._space = Space(self.int_dtype, self.np_random, space_length, num_agents, num_powers)
+        self._space = Space(self.int_dtype, self.np_random, space_length, num_agents)
 
         # Ensure that there is enough space for all agents and the goal
         assert self.num_agents < self.space.volume
@@ -62,10 +75,23 @@ class Realm(gym.Env):
     @property
     def space(self):
         return self._space
+    
+    @property
+    def agent_types(self):
+        return self._agent_types
 
     @property
     def num_agents(self):
+        assert self.space.num_agents == len(self.agent_types)
         return self.space.num_agents
+    
+    @property
+    def powers(self):
+        return np.where(self.agent_types == self.POWER)[0].astype(self.int_dtype)
+    
+    @property
+    def angels(self):
+        return np.where(self.agent_types == self.ANGEL)[0].astype(self.int_dtype)
     
     @property
     def marred(self):

@@ -110,7 +110,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         )
         data_dict.add_data(
             name="agent_types",
-            data=self.space.agent_types,
+            data=self.agent_types,
         )
         data_dict.add_data(
             name="goal_point",
