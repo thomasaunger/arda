@@ -77,8 +77,8 @@ while running:
     # Default actions
     actions = {agent_id: np.array(
         [
-            world.space.agent_class.actions[world.space.agent_class.TURN]["NONE"],
-            world.space.agent_class.actions[world.space.agent_class.MOVE]["NONE"],
+            world.space.actions[world.space.TURN]["NONE"],
+            world.space.actions[world.space.MOVE]["NONE"],
         ], dtype=world.int_dtype
     ) for agent_id in range(world.num_agents)}
 
@@ -87,28 +87,28 @@ while running:
     action = False
 
     if keys[pg.K_UP] or (PLAYER_A == list(world.space.powers)[0] and spirit_actions[1].item() == 1):
-        actions[PLAYER_A][world.space.agent_class.MOVE] = world.space.agent_class.actions[world.space.agent_class.MOVE]["FORWARD"]
+        actions[PLAYER_A][world.space.MOVE] = world.space.actions[world.space.MOVE]["FORWARD"]
         action = True
         buttons[PLAYER_A] = "UP"
     elif keys[pg.K_LEFT] or (PLAYER_A == list(world.space.powers)[0] and spirit_actions[0].item() == 1):
-        actions[PLAYER_A][world.space.agent_class.TURN] = world.space.agent_class.actions[world.space.agent_class.TURN]["LEFT"]
+        actions[PLAYER_A][world.space.TURN] = world.space.actions[world.space.TURN]["LEFT"]
         action = True
         buttons[PLAYER_A] = "LEFT"
     elif keys[pg.K_RIGHT] or (PLAYER_A == list(world.space.powers)[0] and spirit_actions[0].item() == 2):
-        actions[PLAYER_A][world.space.agent_class.TURN] = world.space.agent_class.actions[world.space.agent_class.TURN]["RIGHT"]
+        actions[PLAYER_A][world.space.TURN] = world.space.actions[world.space.TURN]["RIGHT"]
         action = True
         buttons[PLAYER_A] = "RIGHT"
     
     if keys[pg.K_i] or (PLAYER_B == list(world.space.powers)[0] and spirit_actions[1].item() == 1):
-        actions[PLAYER_B][world.space.agent_class.MOVE] = world.space.agent_class.actions[world.space.agent_class.MOVE]["FORWARD"]
+        actions[PLAYER_B][world.space.MOVE] = world.space.actions[world.space.MOVE]["FORWARD"]
         action = True
         buttons[PLAYER_B] = "i"
     elif keys[pg.K_j] or (PLAYER_B == list(world.space.powers)[0] and spirit_actions[0].item() == 1):
-        actions[PLAYER_B][world.space.agent_class.TURN] = world.space.agent_class.actions[world.space.agent_class.TURN]["LEFT"]
+        actions[PLAYER_B][world.space.TURN] = world.space.actions[world.space.TURN]["LEFT"]
         action = True
         buttons[PLAYER_B] = "j"
     elif keys[pg.K_l] or (PLAYER_B == list(world.space.powers)[0] and spirit_actions[0].item() == 2):
-        actions[PLAYER_B][world.space.agent_class.TURN] = world.space.agent_class.actions[world.space.agent_class.TURN]["RIGHT"]
+        actions[PLAYER_B][world.space.TURN] = world.space.actions[world.space.TURN]["RIGHT"]
         action = True
         buttons[PLAYER_B] = "l"
 

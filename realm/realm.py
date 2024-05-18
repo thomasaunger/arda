@@ -1,7 +1,6 @@
 import gym
 import numpy as np
 
-from .agents import Agent as Agent
 from .spaces import SquareTiling as Space
 
 
@@ -29,7 +28,7 @@ class Realm(gym.Env):
         self._episode_length = episode_length
 
         # Create space
-        self._space = Space(self.int_dtype, self.np_random, space_length, Agent, num_agents, num_powers)
+        self._space = Space(self.int_dtype, self.np_random, space_length, num_agents, num_powers)
 
         # Ensure that there is enough space for all agents and the goal
         assert self.num_agents < self.space.volume
@@ -40,7 +39,7 @@ class Realm(gym.Env):
         self.observation_space = None  # Note: this will be set via the env_wrapper
         self._action_space = {
             agent_id: gym.spaces.MultiDiscrete(
-                tuple([len(action) for action in self.space.agent_class.actions.values()])
+                tuple([len(action) for action in self.space.actions.values()])
             ) for agent_id in range(self.num_agents)
         }
     

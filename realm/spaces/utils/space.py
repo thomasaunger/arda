@@ -3,14 +3,37 @@ import numpy as np
 
 class Space:
     
-    def __init__(self, int_dtype, np_random, length, agent_class, num_agents, num_powers):
+    POWER = 0
+    ANGEL = 1
+
+    TURN = 0
+    MOVE = 1
+
+    NONE = 0
+    
+    LEFT = 1
+    RIGHT = 2
+
+    FORWARD = 1
+
+    actions = {
+        TURN: {
+            "NONE":  NONE,
+            "LEFT":  LEFT,
+            "RIGHT": RIGHT,
+        },
+        MOVE: {
+            "NONE":    NONE,
+            "FORWARD": FORWARD,
+        },
+    }
+
+    def __init__(self, int_dtype, np_random, length, num_agents, num_powers):
         assert length >= 0, "Space length must be non-negative"
 
         self._int_dtype = int_dtype
         self._np_random = np_random
         self._length    = length
-
-        self._agent_class = agent_class
 
         self._agent_types = np.zeros(num_agents, dtype=self._int_dtype)
 
@@ -20,8 +43,8 @@ class Space:
         )
         angels = np.setdiff1d(agent_ids, powers)
 
-        self._agent_types[powers] = self.agent_class.POWER
-        self._agent_types[angels] = self.agent_class.ANGEL
+        self._agent_types[powers] = self.POWER
+        self._agent_types[angels] = self.ANGEL
     
     @property
     def int_dtype(self):
@@ -36,10 +59,6 @@ class Space:
         return self._length
     
     @property
-    def agent_class(self):
-        return self._agent_class
-    
-    @property
     def agent_types(self):
         return self._agent_types
 
@@ -49,8 +68,8 @@ class Space:
 
     @property
     def powers(self):
-        return np.where(self.agent_types == self.agent_class.POWER)[0].astype(self.int_dtype)
+        return np.where(self.agent_types == self.POWER)[0].astype(self.int_dtype)
     
     @property
     def angels(self):
-        return np.where(self.agent_types == self.agent_class.ANGEL)[0].astype(self.int_dtype)
+        return np.where(self.agent_types == self.ANGEL)[0].astype(self.int_dtype)
