@@ -2,6 +2,7 @@ import gym
 import numpy as np
 
 from .spaces import SquareTiling as Space
+from .spaces import ActionSpaceSpirit
 
 
 class Realm(gym.Env):
@@ -12,9 +13,9 @@ class Realm(gym.Env):
     def __init__(
             self,
             marred=False,
+            space_length=8,
             num_agents=1,
             num_powers=1,
-            space_length=8,
             episode_length=64,
             seed=None,
     ):
@@ -40,8 +41,10 @@ class Realm(gym.Env):
         self._agent_types[powers] = self.POWER
         self._agent_types[angels] = self.ANGEL
 
+        action_space_spirit = ActionSpaceSpirit()
+
         # Create space
-        self._space = Space(self.int_dtype, self.np_random, space_length, num_agents)
+        self._space = Space(self.int_dtype, self.np_random, space_length, num_agents, action_space_spirit)
 
         # Ensure that there is enough space for all agents and the goal
         assert self.num_agents < self.space.volume
@@ -51,7 +54,7 @@ class Realm(gym.Env):
         # Define observation and action spaces
         self.observation_space = None  # Note: this will be set via the env_wrapper
         self._action_space = {
-            agent_id: self.space.action_space for agent_id in range(self.num_agents)
+            agent_id: action_space_spirit for agent_id in range(self.num_agents)
         }
     
     @property
