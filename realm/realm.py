@@ -34,9 +34,7 @@ class Realm(gym.Env):
         # Assign agent types
         self._agent_types = np.zeros(num_agents, dtype=self.int_dtype)
         agent_ids = np.arange(num_agents, dtype=self.int_dtype)
-        powers = self.np_random.choice(
-            agent_ids, num_powers, replace=False
-        )
+        powers = self.np_random.choice(agent_ids, num_powers, replace=False)
         angels = np.setdiff1d(agent_ids, powers)
         self._agent_types[powers] = self.POWER
         self._agent_types[angels] = self.ANGEL
