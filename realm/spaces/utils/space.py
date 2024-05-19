@@ -1,29 +1,22 @@
-import numpy as np
+from .action_space import ActionSpace
 
 
 class Space:
 
-    TURN = 0
-    MOVE = 1
-
-    NONE = 0
-    
-    LEFT = 1
-    RIGHT = 2
-
-    FORWARD = 1
-
-    actions = {
-        TURN: {
-            "NONE":  NONE,
-            "LEFT":  LEFT,
-            "RIGHT": RIGHT,
-        },
-        MOVE: {
-            "NONE":    NONE,
-            "FORWARD": FORWARD,
-        },
-    }
+    _action_space = ActionSpace(
+        "Spirit",
+        {
+            "Turn": [
+                "None",
+                "Left",
+                "Right",
+            ],
+            "Move": [
+                "None",
+                "Forward",
+            ]
+        }
+    )
 
     def __init__(self, int_dtype, np_random, length):
         assert length >= 0, "Space length must be non-negative"
@@ -31,6 +24,10 @@ class Space:
         self._int_dtype = int_dtype
         self._np_random = np_random
         self._length    = length
+    
+    @property
+    def action_space(self):
+        return self._action_space
     
     @property
     def int_dtype(self):

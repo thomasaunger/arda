@@ -51,9 +51,7 @@ class Realm(gym.Env):
         # Define observation and action spaces
         self.observation_space = None  # Note: this will be set via the env_wrapper
         self._action_space = {
-            agent_id: gym.spaces.MultiDiscrete(
-                tuple([len(action) for action in self.space.actions.values()])
-            ) for agent_id in range(self.num_agents)
+            agent_id: self.space.action_space for agent_id in range(self.num_agents)
         }
     
     @property

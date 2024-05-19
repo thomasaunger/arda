@@ -76,7 +76,7 @@ class RegularTiling(Space):
 
     def step(self, actions):
         if 0 < (i_movers := np.where(
-            actions.T[self.MOVE] == self.FORWARD
+            actions.T[self.action_space.MOVE] == self.action_space.MOVE.FORWARD
         )[0]).size:
             self.array[tuple(self.agent_points[i_movers].T)] = 0
             self.agent_points[i_movers] = np.clip(
@@ -92,15 +92,15 @@ class RegularTiling(Space):
             self.array[tuple(self.agent_points[i_movers].T)] = i_movers + 2
 
         if 0 < (i_lefters := np.where(
-            actions.T[self.MOVE] == self.NONE and
-            actions.T[self.TURN] == self.LEFT
+            actions.T[self.action_space.MOVE] == self.action_space.MOVE.NONE and
+            actions.T[self.action_space.TURN] == self.action_space.TURN.LEFT
         )[0]).size:
             self.agent_orientations[i_lefters] -= 1
             self.agent_orientations[i_lefters] %= self.SYMMETRY_ORDER
 
         if 0 < (i_righters := np.where(
-            actions.T[self.MOVE] == self.NONE and
-            actions.T[self.TURN] == self.RIGHT
+            actions.T[self.action_space.MOVE] == self.action_space.MOVE.NONE and
+            actions.T[self.action_space.TURN] == self.action_space.TURN.RIGHT
         )[0]).size:
             self.agent_orientations[i_righters] += 1
             self.agent_orientations[i_righters] %= self.SYMMETRY_ORDER
