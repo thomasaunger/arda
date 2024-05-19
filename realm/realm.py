@@ -2,7 +2,7 @@ import gym
 import numpy as np
 
 from .spaces import SquareTiling as Space
-from .spaces import ActionSpaceSpirit
+from .action_spaces import ActionSpaceSpirit
 
 
 class Realm(gym.Env):
