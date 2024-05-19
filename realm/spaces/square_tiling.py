@@ -1,6 +1,6 @@
 import numpy as np
 
-from .utils import RegularTiling, Rotation
+from .utils import RegularTiling
 
 
 class SquareTiling(RegularTiling):
