@@ -34,7 +34,7 @@ def generate_tag_env_rollout_animation(
         episode_states = {
             "loc_y":        np.random.randint(space_length, size=(episode_length, num_agents)),
             "loc_x":        np.random.randint(space_length, size=(episode_length, num_agents)),
-            "orientations": np.random.randint(          4, size=(episode_length, num_agents)),
+            "orientations": np.random.randint(           4, size=(episode_length, num_agents)),
             "goal_point":   np.random.randint(space_length, size=(episode_length,          2)),
         }
 
