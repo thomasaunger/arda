@@ -13,15 +13,31 @@ from warp_drive.utils.recursive_obs_dict_to_spaces_dict import (
     recursive_obs_dict_to_spaces_dict,
 )
 
+NUM_AGENTS = 2
+
 PLAYER_A = 0
 PLAYER_B = 1
 
+SAMPLE = False
+
 
 # Create an instance of the Seen environment
-world = Realm(num_agents=2)
+world = Realm(num_agents=NUM_AGENTS)
 obs = world.reset()
 world.observation_space = recursive_obs_dict_to_spaces_dict(obs)
 len_str_episode_length = len(str(world.episode_length))
+
+pg.key.set_repeat(delay=150, interval=150) # ms
+
+key_map = {
+    pg.K_UP:    (PLAYER_A, world.space.action_space.MOVE.FORWARD),
+    pg.K_LEFT:  (PLAYER_A, world.space.action_space.TURN.LEFT),
+    pg.K_RIGHT: (PLAYER_A, world.space.action_space.TURN.RIGHT),
+
+    pg.K_i:     (PLAYER_B, world.space.action_space.MOVE.FORWARD),
+    pg.K_j:     (PLAYER_B, world.space.action_space.TURN.LEFT),
+    pg.K_l:     (PLAYER_B, world.space.action_space.TURN.RIGHT),
+}
 
 # Summon spirit
 spirit_config = dict(
@@ -49,75 +65,48 @@ spirit.load_state_dict(
 )
 spirit.eval()
 
-# Initial key presses
-keys = pg.key.get_pressed()
-
-spirit_actions = [torch.tensor(0), torch.tensor(0)]
-
 total_rewards  = np.zeros(2, dtype=world.float_dtype)
 total_episodes = np.ones( 1, dtype=world.int_dtype)
 
 # Game loop
-t_press = 1000000
+t_action = np.array([time.time()] * NUM_AGENTS)
 t_delta = 0.15
 running = True
 while running:
+    # Default actions
+    actions = {
+        agent_id: np.array(
+            [
+                world.space.action_space.TURN.NONE,
+                world.space.action_space.MOVE.NONE,
+            ], dtype=world.int_dtype
+        ) for agent_id in range(world.num_agents)
+    }
+
+    # Spirit actions
+    agent_p = world.powers[0]
+    if t_delta < time.time() - t_action[agent_p]:
+        dists = [Categorical(probs=probs) for probs in spirit(torch.from_numpy(obs[agent_p]))[0]]
+        actions[agent_p] = [dist.sample() for dist in dists] if SAMPLE else [torch.argmax(dist.probs) for dist in dists]
+        t_action[agent_p] = time.time()
+
     # Handle events
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
-    
-    keys = pg.key.get_pressed()
+        elif event.type == pg.KEYDOWN:
+            # Human actions
+            try:
+                agent, action = key_map[event.key]
+                actions[agent][action.type] = action
+                t_action[agent] = time.time()
+            except KeyError:
+                pass
 
-    out = spirit(torch.from_numpy(obs[world.powers[0]]))
-    dists = [Categorical(probs=probs) for probs in out[0]]
-    spirit_actions = [dist.sample() for dist in dists]
-    # spirit_actions = [torch.argmax(probs) for probs in out[0]]
-
-    # Default actions
-    actions = {agent_id: np.array(
-        [
-            world.space.action_space.TURN.NONE,
-            world.space.action_space.MOVE.NONE,
-        ], dtype=world.int_dtype
-    ) for agent_id in range(world.num_agents)}
-
-    buttons = ["", ""]
-
-    action = False
-
-    if keys[pg.K_UP] or (PLAYER_A == list(world.powers)[0] and spirit_actions[1].item() == 1):
-        actions[PLAYER_A][world.space.action_space.MOVE] = world.space.action_space.MOVE.FORWARD
-        action = True
-        buttons[PLAYER_A] = "UP"
-    elif keys[pg.K_LEFT] or (PLAYER_A == list(world.powers)[0] and spirit_actions[0].item() == 1):
-        actions[PLAYER_A][world.space.action_space.TURN] = world.space.action_space.TURN.LEFT
-        action = True
-        buttons[PLAYER_A] = "LEFT"
-    elif keys[pg.K_RIGHT] or (PLAYER_A == list(world.powers)[0] and spirit_actions[0].item() == 2):
-        actions[PLAYER_A][world.space.action_space.TURN] = world.space.action_space.TURN.RIGHT
-        action = True
-        buttons[PLAYER_A] = "RIGHT"
-    
-    if keys[pg.K_i] or (PLAYER_B == list(world.powers)[0] and spirit_actions[1].item() == 1):
-        actions[PLAYER_B][world.space.action_space.MOVE] = world.space.action_space.MOVE.FORWARD
-        action = True
-        buttons[PLAYER_B] = "i"
-    elif keys[pg.K_j] or (PLAYER_B == list(world.powers)[0] and spirit_actions[0].item() == 1):
-        actions[PLAYER_B][world.space.action_space.TURN] = world.space.action_space.TURN.LEFT
-        action = True
-        buttons[PLAYER_B] = "j"
-    elif keys[pg.K_l] or (PLAYER_B == list(world.powers)[0] and spirit_actions[0].item() == 2):
-        actions[PLAYER_B][world.space.action_space.TURN] = world.space.action_space.TURN.RIGHT
-        action = True
-        buttons[PLAYER_B] = "l"
-
-    if action:
-        t_press = time.time()
+    if any([np.any(actions_i) for actions_i in actions.values()]):
         obs, rewards, done, _ = world.step(actions)
         total_rewards += rewards
         print(f"{world.time_step - 1:>{len_str_episode_length}}:\n"
-              f"  actions: {buttons}\n"
               f"  rewards: {rewards}\n"
               f"  running average rewards:"
         )
