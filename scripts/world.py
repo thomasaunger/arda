@@ -27,7 +27,7 @@ obs = world.reset()
 world.observation_space = recursive_obs_dict_to_spaces_dict(obs)
 len_str_episode_length = len(str(world.episode_length))
 
-pg.key.set_repeat(delay=150, interval=150) # ms
+pg.key.set_repeat(150, 150) # delay, interval in ms
 
 key_map = {
     pg.K_UP:    (PLAYER_A, world.space.action_space.MOVE.FORWARD),
