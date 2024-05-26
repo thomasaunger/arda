@@ -4,4 +4,9 @@ class Action:
         assert isinstance(action, str)
         assert isinstance(value, int)
 
-        return type(f"Action{action}", (int,), {})(value)
+        class_attributes = {
+            "type": property(lambda self: getattr(self, "_type")),
+            "_type": None,
+        }
+
+        return type(f"Action{action}", (int,), class_attributes)(value)

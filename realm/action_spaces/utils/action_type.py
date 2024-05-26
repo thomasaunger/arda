@@ -15,5 +15,13 @@ class ActionType:
 
             class_attributes[ACTION]  = property(lambda self, _ACTION=_ACTION: getattr(self, _ACTION))
             class_attributes[_ACTION] = Action(action, i)
+        
+        instance = type(f"Action{action_type}", (int,), class_attributes)(value)
 
-        return type(f"Action{action_type}", (int,), class_attributes)(value)
+        for i, action in enumerate(actions):
+            ACTION = action.upper()
+            _ACTION = f"_{ACTION}"
+
+            class_attributes[_ACTION]._type = instance
+
+        return instance
