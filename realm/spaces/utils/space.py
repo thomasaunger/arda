@@ -1,7 +1,7 @@
 class Space:
 
     def __init__(self, int_dtype, np_random, length):
-        assert length >= 0, "Space length must be non-negative"
+        assert 0 <= length, "Space length must be non-negative"
 
         self._int_dtype = int_dtype
         self._np_random = np_random
