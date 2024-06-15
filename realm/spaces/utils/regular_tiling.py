@@ -92,7 +92,7 @@ class RegularTiling(Space):
                     ]
                 ),
                 0,
-                np.array(self.array.shape) - 1,
+                np.array(self.array.shape) - 1, # TODO: doesn't work for hexagonal cube coordinates; must apply to y and x only, then adjust z as -y-x
                 dtype=self.int_dtype
             )
             self.array[tuple(self.agent_points[i_movers].T)] = i_movers + 2

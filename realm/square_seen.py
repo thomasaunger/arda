@@ -1,9 +1,6 @@
 import pygame as pg
 
-from .blessed_realm import BlessedRealm as Realm
-
-SCREEN_LENGTH_Y = 480
-SCREEN_LENGTH_X = 640
+from .utils import Seen
 
 CELL_LENGTH_Y = 32
 CELL_LENGTH_X = 32
@@ -14,18 +11,7 @@ COORDINATE_X = 1
 MARGIN = 2
 
 
-class Seen(Realm):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # Initialize pygame
-        pg.init()
-
-        # Create a window
-        self.screen = pg.display.set_mode((SCREEN_LENGTH_X, SCREEN_LENGTH_Y))
-        
-        pg.display.set_caption("Realm")
+class SquareSeen(Seen):
 
     def _agent_image(self, agent_id):
         y_offset = (self.screen.get_height() - self.space.array.shape[COORDINATE_Y]*CELL_LENGTH_Y)//2
