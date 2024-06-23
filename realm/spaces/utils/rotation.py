@@ -10,6 +10,9 @@ class Rotation(np.ndarray):
         super().__init__(*args, **kwargs)
         self._SYMMETRY_ORDER = symmetry_order
     
+    def __array_wrap__(self, out_arr, context=None):
+        return np.asarray(out_arr)
+    
     @property
     def SYMMETRY_ORDER(self):
         return self._SYMMETRY_ORDER
