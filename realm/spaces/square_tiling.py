@@ -34,7 +34,7 @@ class SquareTiling(RegularTiling):
     
     @property
     def R(self):
-        return super().R(
+        return self._R(
             np.array(
                 [
                     [ 0, 1],
@@ -46,12 +46,6 @@ class SquareTiling(RegularTiling):
     @property
     def volume(self):
         return self.length**2
-
-    def rotate_coordinates(self, coordinates, orientation):
-        """
-        Rotate the coordinates based on orientation
-        """
-        new_coordinates = coordinates.copy()
-        for _ in range(orientation):
-            new_coordinates = np.array([self.length - 1, 0], dtype=self.int_dtype) + self.L.dot(new_coordinates)
-        return new_coordinates
+    
+    def _random_point(self):
+        return np.array([self.np_random.randint(shape, dtype=self.int_dtype) for shape in self.array.shape], dtype=self.int_dtype)

@@ -1,6 +1,7 @@
 import gym
 import numpy as np
 
+# from .spaces import HexagonalTiling as Space
 from .spaces import SquareTiling as Space
 from .action_spaces import ActionSpaceSpirit
 
@@ -13,7 +14,7 @@ class Realm(gym.Env):
     def __init__(
             self,
             marred=False,
-            space_length=8,
+            radius=3,
             num_agents=1,
             num_powers=1,
             episode_length=64,
@@ -28,7 +29,7 @@ class Realm(gym.Env):
         if seed is not None:
             self._seed(seed)
         
-        assert episode_length > 0
+        assert 0 < episode_length
         self._episode_length = episode_length
 
         # Assign agent types
@@ -42,7 +43,7 @@ class Realm(gym.Env):
         action_space_spirit = ActionSpaceSpirit()
 
         # Create space
-        self._space = Space(self.int_dtype, self.np_random, space_length, num_agents, action_space_spirit)
+        self._space = Space(self.int_dtype, self.np_random, radius, num_agents, action_space_spirit)
 
         # Ensure that there is enough space for all agents and the goal
         assert self.num_agents < self.space.volume

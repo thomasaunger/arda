@@ -15,7 +15,7 @@ class HexagonalTiling(RegularTiling):
     _NORTHWEST = 5
 
     def __init__(self, int_dtype, np_random, radius, num_agents, action_space):
-        super().__init__(int_dtype, np_random, 2*radius + 1, num_agents, action_space)
+        super().__init__(int_dtype, np_random, radius, num_agents, action_space)
 
     @property
     def NORTH(self):
@@ -42,14 +42,6 @@ class HexagonalTiling(RegularTiling):
         return self._SOUTHWEST
     
     @property
-    def radius(self):
-        return self.length//2
-    
-    @property
-    def center(self):
-        return np.array([-2*self.radius, self.radius, self.radius], dtype=self.int_dtype)
-    
-    @property
     def principal_orientation(self):
         # [z, y, x] = [s, r, q]
         # https://www.redblobgames.com/grids/hexagons/
@@ -57,22 +49,22 @@ class HexagonalTiling(RegularTiling):
     
     @property
     def R(self):
-        return super().R(
+        return self._R(
             np.array(
-                [ # [ s,  r,  q]
-                    [ 0,  0, -1], # s = -q
-                    [-1,  0,  0], # r = -s
-                    [ 0, -1,  0]  # q = -r
+                [ # [ z,  y,  x]
+                    [ 0,  0, -1], # z = -x
+                    [-1,  0,  0], # y = -z
+                    [ 0, -1,  0]  # x = -y
                 ], dtype=self.int_dtype
             )
         )
 
     @property
     def volume(self):
-        return self.length**2
-
-    def rotate_coordinates(self, coordinates, orientation):
-        """
-        Rotate the coordinates based on orientation
-        """
-        return self.L.pow(orientation).dot(coordinates - self.center) + self.center
+        return self.length**2 - self.radius*(self.radius + 1)
+    
+    def _random_point(self):
+        point = [self.np_random.randint(shape, dtype=self.int_dtype) for shape in self.array.shape[1:]]
+        while sum(point) < self.radius or 3*self.radius < sum(point):
+            point = [self.np_random.randint(shape, dtype=self.int_dtype) for shape in self.array.shape[1:]]
+        return np.array([3*self.radius - sum(point), *point], dtype=self.int_dtype)

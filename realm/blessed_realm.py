@@ -92,8 +92,8 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
             data=self.marred,
         )
         data_dict.add_data(
-            name="space_length",
-            data=self.space.length,
+            name="radius",
+            data=self.space.radius,
         )
         for coordinate in range(self.space.dims):
             data_dict.add_data(
@@ -129,7 +129,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
 
             args = [
                 "marred",
-                "space_length",
+                "radius",
                 *[self._coordinate_name(coordinate) for coordinate in range(self.space.dims)],
                 _ORIENTATIONS,
                 "agent_types",

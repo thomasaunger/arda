@@ -6,8 +6,8 @@ from .rotation import Rotation
 
 class RegularTiling(Space):
     
-    def __init__(self, int_dtype, np_random, length, num_agents, action_space):
-        super().__init__(int_dtype, np_random, length)
+    def __init__(self, int_dtype, np_random, radius, num_agents, action_space):
+        super().__init__(int_dtype, np_random, radius)
 
         self._num_agents = num_agents
 
@@ -40,6 +40,10 @@ class RegularTiling(Space):
         return self._array
     
     @property
+    def center(self):
+        return (np.array(self.array.shape, dtype=self.int_dtype) - 1)//2
+    
+    @property
     def agent_points(self):
         return self._agent_points
 
@@ -51,27 +55,39 @@ class RegularTiling(Space):
     def L(self):
         return Rotation(self.R.pow(-1), self.SYMMETRY_ORDER)
     
-    def R(self, matrix):
+    def _R(self, matrix):
         return Rotation(matrix, self.SYMMETRY_ORDER)
-
-    def _random_coordinates(self):
-        return np.array([self.np_random.randint(shape, dtype=self.int_dtype) for shape in self.array.shape], dtype=self.int_dtype)
     
+    def _validate_points(self, points):
+        return np.where(
+            np.all(
+                np.clip(
+                    points,
+                    0,
+                    np.array(self.array.shape) - 1,
+                    dtype=self.int_dtype
+                ) == points, axis=1
+            )
+        )[0].astype(self.int_dtype)
+
+    def rotate_coordinates(self, coordinates, orientation):
+        """
+        Rotate the coordinates based on orientation
+        """
+        return self.L.pow(orientation).dot(coordinates - self.center) + self.center
+        
     def get_unoccupied_point(self):
         while True:
-            point = self._random_coordinates()
+            point = self._random_point()
             if not np.any(np.all(point == self.agent_points, axis=1)):
                 return point
-    
-    def occupied(self, point):
-        return 0 < self.array[tuple(point.T)]
 
     def reset(self):
         self.array.fill(0)
 
         for i in range(self.num_agents):
             while True:
-                point = self._random_coordinates()
+                point = self._random_point()
                 if not np.any(np.all(point == self.agent_points[:i], axis=1)):
                     break
             self._agent_points[i] = point
@@ -84,18 +100,15 @@ class RegularTiling(Space):
         if 0 < (i_movers := np.where(
             actions.T[self.action_space.MOVE] == self.action_space.MOVE.FORWARD
         )[0].astype(self.int_dtype)).size:
-            self.array[tuple(self.agent_points[i_movers].T)] = 0
-            self.agent_points[i_movers] = np.clip(
-                self.agent_points[i_movers] + np.array(
-                    [
-                        self.R.pow(agent_orientation).dot(self.principal_orientation) for agent_orientation in self.agent_orientations[i_movers]
-                    ]
-                ),
-                0,
-                np.array(self.array.shape) - 1, # TODO: doesn't work for hexagonal cube coordinates; must apply to y and x only, then adjust z as -y-x
-                dtype=self.int_dtype
+            new_agent_points = self.agent_points[i_movers] + np.array(
+                [
+                    self.R.pow(agent_orientation).dot(self.principal_orientation) for agent_orientation in self.agent_orientations[i_movers]
+                ]
             )
-            self.array[tuple(self.agent_points[i_movers].T)] = i_movers + 2
+            if 0 < (i_movers_validated := self._validate_points(new_agent_points)).size:
+                self.array[tuple(self.agent_points[i_movers[i_movers_validated]].T)] = 0
+                self.agent_points[i_movers[i_movers_validated]] = new_agent_points[i_movers_validated]
+                self.array[tuple(self.agent_points[i_movers[i_movers_validated]].T)] = i_movers[i_movers_validated] + 2
 
         if 0 < (i_lefters := np.intersect1d(
                 np.where(
