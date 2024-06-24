@@ -221,7 +221,7 @@ extern "C" {
 
   __global__ void CudaBlessedRealmStep(
     const bool kMarred,
-    int kSpaceLength,
+    int kRadius,
     int * loc_y_arr,
     int * loc_x_arr,
     int * orientation_arr,
@@ -240,6 +240,7 @@ extern "C" {
     const int kThisAgentArrayIdx = kEnvId * kNumAgents + kThisAgentId;
     const int kNumActions = 2;
     const int kThisAgentActionIdxOffset = kEnvId * kNumAgents * kNumActions + kThisAgentId * kNumActions;
+    const int kSpaceLength = 2*kRadius + 1;
 
     int action_turn = action_indices_arr[kThisAgentActionIdxOffset    ];
     int action_move = action_indices_arr[kThisAgentActionIdxOffset + 1];
