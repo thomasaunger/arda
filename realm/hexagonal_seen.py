@@ -10,7 +10,16 @@ COORDINATE_X = 2
 
 class HexagonalSeen(Seen):
 
-    def render_hexagon(self, y, x, ka, kb, m_h, color=(255, 255, 255)):
+    def _i2p(self, y, x, ka, kb, m_h):
+        """
+        Convert indices to pixels.
+        """
+        y_offset = self.screen.get_height()//2 - self.space.radius*3*(ka + m_h)
+        x_offset = self.screen.get_width()//2  - self.space.radius*(kb + 3*m_h)
+        return (y_offset + y*2*(ka + m_h) + x*(ka +   m_h),
+                x_offset                  + x*(kb + 3*m_h))
+
+    def _render_hexagon(self, y, x, ka, kb, m_h, color=(255, 255, 255), width=1):
         pg.draw.polygon(
             self.screen,
             color,
@@ -22,10 +31,10 @@ class HexagonalSeen(Seen):
                 (x + (kb - ka)//2 + ka + 2*m_h, y),
                 (x + (kb - ka)//2      +   m_h, y + ka + m_h),
             ],
-            1
+            width
         )
     
-    def render_agent(self, y, x, ka, kb, a, b, orientation, color=(255, 0, 0)):
+    def _render_agent(self, y, x, ka, kb, a, b, orientation, color=(255, 0, 0)):
         m_a = 0    # margin      in kc
         h   = 1    # head height in kc
         w   = ka/2 # width       in pixels
@@ -101,20 +110,13 @@ class HexagonalSeen(Seen):
 
         m_h = 2 # hexagon margin in pixels
 
-        # Center
-        y_offset = self.screen.get_height()//2 - self.space.radius*3*(ka + m_h)
-        x_offset = self.screen.get_width()//2  - self.space.radius*(kb + 3*m_h)
-
         self.screen.fill((0, 0, 0)) # Fill the screen with black color
-
-        # Render environment
-        for y in range(self.space.array.shape[COORDINATE_Y]):
-            for x in range(self.space.array.shape[COORDINATE_X]):
-                if self.space.radius <= x + y <= 3*self.space.radius:
-                    y_center = y_offset + y*2*(ka + m_h) + x*(ka + m_h)
-                    x_center = x_offset                  + x*(kb + 3*m_h)
-                    self.render_hexagon(y_center, x_center, ka, kb, m_h)
         
+        # Render goal
+        y = self.goal_point[COORDINATE_Y]
+        x = self.goal_point[COORDINATE_X]
+        self._render_hexagon(*self._i2p(y, x, ka, kb, m_h), ka, kb, 0, color=(0, 255, 0), width=0)
+
         # Render agents
         for agent_id in range(self.num_agents):
             if self.agent_types[agent_id] == self.ANGEL:
@@ -123,8 +125,12 @@ class HexagonalSeen(Seen):
                 color = (0, 0, 255)
             y = self.space.agent_points[agent_id][COORDINATE_Y]
             x = self.space.agent_points[agent_id][COORDINATE_X]
-            y_center = y_offset + y*2*(ka + m_h) + x*(ka + m_h)
-            x_center = x_offset                  + x*(kb + 3*m_h)
-            self.render_agent(y_center, x_center, ka, kb, a, b, self.space.agent_orientations[agent_id], color)
+            self._render_agent(*self._i2p(y, x, ka, kb, m_h), ka, kb, a, b, self.space.agent_orientations[agent_id], color)
+        
+        # Render environment
+        for y in range(self.space.array.shape[COORDINATE_Y]):
+            for x in range(self.space.array.shape[COORDINATE_X]):
+                if self.space.radius <= x + y <= 3*self.space.radius:
+                    self._render_hexagon(*self._i2p(y, x, ka, kb, m_h), ka, kb, m_h)
 
         pg.display.flip() # Update the display
