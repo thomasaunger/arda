@@ -58,6 +58,7 @@ spirit.load_state_dict(
     torch.load(
         os.path.join(
             "spirits",
+            "square",
             "power_6389760.state_dict"
         ),
         map_location=torch.device("cpu")

@@ -1,14 +1,14 @@
 import numpy as np
-# import os
+import os
 import pygame as pg
 import time
-# import torch
+import torch
 
 from realm import HexagonalSeen as Realm
 
-# from torch.distributions.categorical import Categorical
+from torch.distributions.categorical import Categorical
 
-# from warp_drive.training.models.fully_connected         import FullyConnected
+from warp_drive.training.models.fully_connected         import FullyConnected
 from warp_drive.utils.recursive_obs_dict_to_spaces_dict import (
     recursive_obs_dict_to_spaces_dict,
 )
@@ -39,31 +39,32 @@ key_map = {
     pg.K_l:     (PLAYER_B, world.space.action_space.TURN.RIGHT),
 }
 
-# # Summon spirit
-# spirit_config = dict(
-#     type="fully_connected", fc_dims=[1024, 1024, 1024], spirit_ckpt_filepath=""
-# )
-# policy = "power"
-# policy_tag_to_agent_id_map = {
-#     "power": world.powers,
-#     "angel": world.angels,
-# }
-# spirit = FullyConnected(
-#     world,
-#     spirit_config,
-#     policy,
-#     policy_tag_to_agent_id_map
-# )
-# spirit.load_state_dict(
-#     torch.load(
-#         os.path.join(
-#             "spirits",
-#             "power_6389760.state_dict"
-#         ),
-#         map_location=torch.device("cpu")
-#     )
-# )
-# spirit.eval()
+# Summon spirit
+spirit_config = dict(
+    type="fully_connected", fc_dims=[1024, 1024, 1024], spirit_ckpt_filepath=""
+)
+policy = "power"
+policy_tag_to_agent_id_map = {
+    "power": world.powers,
+    "angel": world.angels,
+}
+spirit = FullyConnected(
+    world,
+    spirit_config,
+    policy,
+    policy_tag_to_agent_id_map
+)
+spirit.load_state_dict(
+    torch.load(
+        os.path.join(
+            "spirits",
+            "hexagonal",
+            "power_6389760.state_dict"
+        ),
+        map_location=torch.device("cpu")
+    )
+)
+spirit.eval()
 
 total_rewards  = np.zeros(2, dtype=world.float_dtype)
 total_episodes = np.ones( 1, dtype=world.int_dtype)
@@ -84,11 +85,11 @@ while running:
     }
 
     # Spirit actions
-    # agent_p = world.powers[0]
-    # if t_delta < time.time() - t_action[agent_p]:
-    #     dists = [Categorical(probs=probs) for probs in spirit(torch.from_numpy(obs[agent_p]))[0]]
-    #     actions[agent_p] = [dist.sample() for dist in dists] if SAMPLE else [torch.argmax(dist.probs) for dist in dists]
-    #     t_action[agent_p] = time.time()
+    agent_p = world.powers[0]
+    if t_delta < time.time() - t_action[agent_p]:
+        dists = [Categorical(probs=probs) for probs in spirit(torch.from_numpy(obs[agent_p]))[0]]
+        actions[agent_p] = [dist.sample() for dist in dists] if SAMPLE else [torch.argmax(dist.probs) for dist in dists]
+        t_action[agent_p] = time.time()
 
     # Handle events
     for event in pg.event.get():
