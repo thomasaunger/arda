@@ -16,6 +16,7 @@ class ActionSpaceSpirit(ActionSpace):
                     "None",
                     "Forward",
                 ],
-                **{f"Position_{m}": [f"Symbol_{n}" for n in range(num_symbols)] for m in range(num_positions)}
-            }
+                **{f"Position_{m}": [f"Symbol_{n}" for n in range(num_symbols)] for m in range(num_positions)},
+            },
+            num_positions=num_positions,
         )

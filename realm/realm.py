@@ -8,9 +8,6 @@ from .action_spaces import ActionSpaceSpirit
 
 class Realm(gym.Env):
 
-    NUM_POSITIONS = 8
-    NUM_SYMBOLS = 8
-
     POWER = 0
     ANGEL = 1
 
@@ -20,8 +17,8 @@ class Realm(gym.Env):
             radius=3,
             num_agents=1,
             num_powers=1,
-            num_positions=NUM_POSITIONS,
-            num_symbols=NUM_SYMBOLS,
+            num_positions=8,
+            num_symbols=8,
             episode_length=64,
             seed=None,
     ):

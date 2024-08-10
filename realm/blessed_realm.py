@@ -64,7 +64,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
                         self.space.agent_orientations[agent_id]
                     ),
                     self.space.agent_orientations[agent_id].reshape(-1),
-                    np.zeros((self.NUM_POSITIONS), dtype=self.int_dtype),
+                    np.zeros((self.space.action_space.num_positions), dtype=self.int_dtype),
                 ], dtype=self.float_dtype
             )
 

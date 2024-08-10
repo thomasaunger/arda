@@ -97,7 +97,7 @@ actions = {
         [
             world.space.action_space.TURN.NONE,
             world.space.action_space.MOVE.NONE,
-            *[0]*world.NUM_POSITIONS,
+            *[0]*world.space.action_space.num_positions,
         ], dtype=world.int_dtype
     ) for agent_id in range(world.num_agents)
 }
@@ -117,8 +117,8 @@ while not quit:
         dists = [Categorical(probs=probs) for probs in angel(torch.from_numpy(
             np.concatenate(
                 [
-                    np.zeros(len(obs[agent_a][:-world.NUM_POSITIONS]), dtype=world.float_dtype),
-                    actions[agent_p][-world.NUM_POSITIONS:].astype(world.float_dtype),
+                    np.zeros(len(obs[agent_a][:-world.space.action_space.num_positions]), dtype=world.float_dtype),
+                    actions[agent_p][-world.space.action_space.num_positions:].astype(world.float_dtype),
                 ],
                 dtype=world.float_dtype
             )
@@ -130,8 +130,8 @@ while not quit:
         dists = [Categorical(probs=probs) for probs in power(torch.from_numpy(
             np.concatenate(
                 [
-                    obs[agent_a][:-world.NUM_POSITIONS],
-                    np.zeros(world.NUM_POSITIONS, dtype=world.float_dtype),
+                    obs[agent_a][:-world.space.action_space.num_positions],
+                    np.zeros(world.space.action_space.num_positions, dtype=world.float_dtype),
                 ],
                 dtype=world.float_dtype
             )
@@ -154,7 +154,7 @@ while not quit:
             except KeyError:
                 pass
 
-    if any([np.any(actions_i[:-world.NUM_POSITIONS]) for actions_i in actions.values()]):
+    if any([np.any(actions_i[:-world.space.action_space.num_positions]) for actions_i in actions.values()]):
         obs, rewards, done, _ = world.step(actions)
         total_rewards += rewards
         print(f"{world.time_step - 1:>{len_str_episode_length}}:\n"
