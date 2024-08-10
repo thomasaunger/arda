@@ -19,7 +19,7 @@ def generate_tag_env_rollout_animation(
         assert trainer is not None
 
         episode_states = trainer.fetch_episode_states(
-            ["loc_y", "loc_x", "orientations", "goal_point", "rewards"]
+            ["loc_y", "loc_x", "orientations", "goal_point", "rewards", "sampled_actions"]
         )
         assert isinstance(episode_states, dict)
         env = trainer.cuda_envs.env
