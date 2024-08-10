@@ -64,6 +64,7 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
                         self.space.agent_orientations[agent_id]
                     ),
                     self.space.agent_orientations[agent_id].reshape(-1),
+                    np.zeros((self.NUM_POSITIONS), dtype=self.int_dtype),
                 ], dtype=self.float_dtype
             )
 
@@ -74,7 +75,10 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         """
         Compute and return the rewards for each agent.
         """
-        return self.goal_reached*(1.0 - self.time_step/self.episode_length)
+        if any(self.goal_reached):
+            return self.goal_reached*0 + (1.0 - self.time_step/self.episode_length)
+        else:
+            return self.goal_reached*0
     
     def _coordinate_name(self, coordinate):
         """
@@ -111,6 +115,8 @@ class BlessedRealm(Realm, CUDAEnvironmentContext):
         data_dict.add_data(
             name="agent_types",
             data=self.agent_types,
+            save_copy_and_apply_at_reset=False,
+            log_data_across_episode=True,
         )
         data_dict.add_data(
             name="goal_point",

@@ -8,6 +8,9 @@ from .action_spaces import ActionSpaceSpirit
 
 class Realm(gym.Env):
 
+    NUM_POSITIONS = 8
+    NUM_SYMBOLS = 8
+
     POWER = 0
     ANGEL = 1
 
@@ -17,6 +20,8 @@ class Realm(gym.Env):
             radius=3,
             num_agents=1,
             num_powers=1,
+            num_positions=NUM_POSITIONS,
+            num_symbols=NUM_SYMBOLS,
             episode_length=64,
             seed=None,
     ):
@@ -40,7 +45,7 @@ class Realm(gym.Env):
         self._agent_types[powers] = self.POWER
         self._agent_types[angels] = self.ANGEL
 
-        action_space_spirit = ActionSpaceSpirit()
+        action_space_spirit = ActionSpaceSpirit(num_positions=num_positions, num_symbols=num_symbols)
 
         # Create space
         self._space = Space(self.int_dtype, self.np_random, radius, num_agents, action_space_spirit)
@@ -138,7 +143,7 @@ class Realm(gym.Env):
         assert isinstance(actions, dict)
         assert len(actions) == self.num_agents
 
-        self.space.step(np.vstack(tuple(actions.values())))
+        self.space.step(np.vstack(tuple(actions.values()), dtype=self.int_dtype))
 
         obss = self.observations
         rewards = self.rewards
