@@ -18,7 +18,7 @@ NUM_AGENTS = 2
 PLAYER_A = 0
 PLAYER_B = 1
 
-SAMPLE = False
+SAMPLE = True
 
 
 # Create an instance of the Seen environment
