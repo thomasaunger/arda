@@ -1,3 +1,8 @@
+__constant__ int NUM_POSITIONS = 2;
+
+__constant__ int POWER = 0;
+__constant__ int ANGEL = 1;
+
 __constant__ int DIMS = 3;
 
 __constant__ int SYMMETRY_ORDER = 6;
@@ -152,7 +157,12 @@ extern "C" {
       if (loc_z_arr[kThisAgentArrayIdx] == goal_point_arr[kEnvId * DIMS    ] &&
           loc_y_arr[kThisAgentArrayIdx] == goal_point_arr[kEnvId * DIMS + 1] &&
           loc_x_arr[kThisAgentArrayIdx] == goal_point_arr[kEnvId * DIMS + 2]) {
-        rewards_arr[kThisAgentArrayIdx] = 1.0 * (1.0 - env_timestep_arr[kEnvId] / float(kEpisodeLength));
+        // rewards_arr[kThisAgentArrayIdx] = 1.0 * (1.0 - env_timestep_arr[kEnvId] / float(kEpisodeLength));
+        float reward = 1.0 * (1.0 - env_timestep_arr[kEnvId] / float(kEpisodeLength));
+        for (int kAgentId = 0; kAgentId < kNumAgents; kAgentId++) {
+          int kAgentIdx = kEnvId * kNumAgents + kAgentId;
+          rewards_arr[kAgentIdx] = reward;
+        }
         // done_arr[kEnvId] = 1;
       }
 
@@ -173,20 +183,26 @@ extern "C" {
     int * loc_y_arr,
     int * loc_x_arr,
     int * orientation_arr,
+    int * agent_types_arr,
     int * goal_point_arr,
     float * obs_arr,
     int * done_arr,
+    int * action_indices_arr,
     int * env_timestep_arr,
     const int kNumAgents,
     const int kEpisodeLength,
     const int kEnvId,
     const int kThisAgentId,
-    const int kThisAgentArrayIdx
+    const int kThisAgentArrayIdx,
+    const int kNumActions
   ) {
     if (kThisAgentId < kNumAgents) {
       // obs shape is (num_envs, kNumAgents, n)
-      const int n = 7;
+      const int n = 7 + NUM_POSITIONS;
       const int kThisAgentIdxOffset = (kEnvId * kNumAgents + kThisAgentId) * n;
+      const int kThatAgentId = (kThisAgentId + 1) % kNumAgents;
+      const int kThatAgentArrayIdx = kEnvId * kNumAgents + kThatAgentId;
+      const int kThatAgentActionIdxOffset = kEnvId * kNumAgents * kNumActions + kThatAgentId * kNumActions;
 
       // Initialize obs
       for (int i = 0; i < n; i++) {
@@ -253,22 +269,28 @@ extern "C" {
         }
       }
 
-      loc_z = loc_z_arr[kThisAgentArrayIdx];
-      loc_y = loc_y_arr[kThisAgentArrayIdx];
-      loc_x = loc_x_arr[kThisAgentArrayIdx];
-      RotateCoordinates(kRadius, orientation_arr[kThisAgentArrayIdx], &loc_z, &loc_y, &loc_x);
-      obs_arr[kThisAgentIdxOffset    ] = loc_z;
-      obs_arr[kThisAgentIdxOffset + 1] = loc_y;
-      obs_arr[kThisAgentIdxOffset + 2] = loc_x;
+      if (agent_types_arr[kThisAgentId] == POWER) {
+        loc_z = loc_z_arr[kThatAgentArrayIdx];
+        loc_y = loc_y_arr[kThatAgentArrayIdx];
+        loc_x = loc_x_arr[kThatAgentArrayIdx];
+        RotateCoordinates(kRadius, orientation_arr[kThatAgentArrayIdx], &loc_z, &loc_y, &loc_x);
+        obs_arr[kThisAgentIdxOffset    ] = loc_z;
+        obs_arr[kThisAgentIdxOffset + 1] = loc_y;
+        obs_arr[kThisAgentIdxOffset + 2] = loc_x;
 
-      loc_z = goal_point_arr[kEnvId * DIMS    ];
-      loc_y = goal_point_arr[kEnvId * DIMS + 1];
-      loc_x = goal_point_arr[kEnvId * DIMS + 2];
-      RotateCoordinates(kRadius, orientation_arr[kThisAgentArrayIdx], &loc_z, &loc_y, &loc_x);
-      obs_arr[kThisAgentIdxOffset + 3] = loc_z - obs_arr[kThisAgentIdxOffset    ];
-      obs_arr[kThisAgentIdxOffset + 4] = loc_y - obs_arr[kThisAgentIdxOffset + 1];
-      obs_arr[kThisAgentIdxOffset + 5] = loc_x - obs_arr[kThisAgentIdxOffset + 2];
-      obs_arr[kThisAgentIdxOffset + 6] = orientation_arr[kThisAgentArrayIdx];
+        loc_z = goal_point_arr[kEnvId * DIMS    ];
+        loc_y = goal_point_arr[kEnvId * DIMS + 1];
+        loc_x = goal_point_arr[kEnvId * DIMS + 2];
+        RotateCoordinates(kRadius, orientation_arr[kThatAgentArrayIdx], &loc_z, &loc_y, &loc_x);
+        obs_arr[kThisAgentIdxOffset + 3] = loc_z - obs_arr[kThisAgentIdxOffset    ];
+        obs_arr[kThisAgentIdxOffset + 4] = loc_y - obs_arr[kThisAgentIdxOffset + 1];
+        obs_arr[kThisAgentIdxOffset + 5] = loc_x - obs_arr[kThisAgentIdxOffset + 2];
+        obs_arr[kThisAgentIdxOffset + 6] = orientation_arr[kThatAgentArrayIdx];
+      } else {
+        for (int position = 0; position < NUM_POSITIONS; position++) {
+          obs_arr[kThisAgentIdxOffset + 7 + position] = action_indices_arr[kThatAgentActionIdxOffset + 2 + position];
+        }
+      }
     }
   }
 
@@ -292,66 +314,68 @@ extern "C" {
     const int kEnvId = getEnvID(blockIdx.x);
     const int kThisAgentId = getAgentID(threadIdx.x, blockIdx.x, blockDim.x);
     const int kThisAgentArrayIdx = kEnvId * kNumAgents + kThisAgentId;
-    const int kNumActions = 2;
+    const int kNumActions = 2 + NUM_POSITIONS;
     const int kThisAgentActionIdxOffset = kEnvId * kNumAgents * kNumActions + kThisAgentId * kNumActions;
     const int kSpaceLength = 2*kRadius + 1;
 
-    int action_turn = action_indices_arr[kThisAgentActionIdxOffset    ];
-    int action_move = action_indices_arr[kThisAgentActionIdxOffset + 1];
+    if (agent_types_arr[kThisAgentId] == ANGEL) {
+      int action_turn = action_indices_arr[kThisAgentActionIdxOffset    ];
+      int action_move = action_indices_arr[kThisAgentActionIdxOffset + 1];
 
-    int loc_z_tmp = loc_z_arr[kThisAgentArrayIdx];
-    int loc_y_tmp = loc_y_arr[kThisAgentArrayIdx];
-    int loc_x_tmp = loc_x_arr[kThisAgentArrayIdx];
+      int loc_z_tmp = loc_z_arr[kThisAgentArrayIdx];
+      int loc_y_tmp = loc_y_arr[kThisAgentArrayIdx];
+      int loc_x_tmp = loc_x_arr[kThisAgentArrayIdx];
 
-    if (action_move == FORWARD) {
-      if        (orientation_arr[kThisAgentArrayIdx] == NORTH    ) {
-        loc_z_tmp += 1;
-        loc_y_tmp -= 1;
-      } else if (orientation_arr[kThisAgentArrayIdx] == NORTHEAST) {
-        loc_y_tmp -= 1;
-        loc_x_tmp += 1;
-      } else if (orientation_arr[kThisAgentArrayIdx] == SOUTHEAST) {
-        loc_z_tmp -= 1;
-        loc_x_tmp += 1;
-      } else if (orientation_arr[kThisAgentArrayIdx] == SOUTH    ) {
-        loc_z_tmp -= 1;
-        loc_y_tmp += 1;
-      } else if (orientation_arr[kThisAgentArrayIdx] == SOUTHWEST) {
-        loc_y_tmp += 1;
-        loc_x_tmp -= 1;
-      } else if (orientation_arr[kThisAgentArrayIdx] == NORTHWEST) {
-        loc_z_tmp += 1;
-        loc_x_tmp -= 1;
+      if (action_move == FORWARD) {
+        if        (orientation_arr[kThisAgentArrayIdx] == NORTH    ) {
+          loc_z_tmp += 1;
+          loc_y_tmp -= 1;
+        } else if (orientation_arr[kThisAgentArrayIdx] == NORTHEAST) {
+          loc_y_tmp -= 1;
+          loc_x_tmp += 1;
+        } else if (orientation_arr[kThisAgentArrayIdx] == SOUTHEAST) {
+          loc_z_tmp -= 1;
+          loc_x_tmp += 1;
+        } else if (orientation_arr[kThisAgentArrayIdx] == SOUTH    ) {
+          loc_z_tmp -= 1;
+          loc_y_tmp += 1;
+        } else if (orientation_arr[kThisAgentArrayIdx] == SOUTHWEST) {
+          loc_y_tmp += 1;
+          loc_x_tmp -= 1;
+        } else if (orientation_arr[kThisAgentArrayIdx] == NORTHWEST) {
+          loc_z_tmp += 1;
+          loc_x_tmp -= 1;
+        }
+      } else if (action_turn == LEFT) {
+        orientation_arr[kThisAgentArrayIdx] = (orientation_arr[kThisAgentArrayIdx] + SYMMETRY_ORDER - 1) % SYMMETRY_ORDER;
+      } else if (action_turn == RIGHT) {
+        orientation_arr[kThisAgentArrayIdx] = (orientation_arr[kThisAgentArrayIdx] +                  1) % SYMMETRY_ORDER;
       }
-    } else if (action_turn == LEFT) {
-      orientation_arr[kThisAgentArrayIdx] = (orientation_arr[kThisAgentArrayIdx] + SYMMETRY_ORDER - 1) % SYMMETRY_ORDER;
-    } else if (action_turn == RIGHT) {
-      orientation_arr[kThisAgentArrayIdx] = (orientation_arr[kThisAgentArrayIdx] +                  1) % SYMMETRY_ORDER;
-    }
 
-    if (
-      PointIsWithinBounds(
-        kRadius,
-        kSpaceLength,
-        loc_z_tmp,
-        loc_y_tmp,
-        loc_x_tmp
-      )  // && !PointIsOccupied(
-      //   loc_z_arr,
-      //   loc_y_arr,
-      //   loc_x_arr,
-      //   kNumAgents,
-      //   kEnvId,
-      //   kThisAgentId,
-      //   loc_z_tmp,
-      //   loc_y_tmp,
-      //   loc_x_tmp
-      // )
-    ) {
-      // Update the point of the agent
-      loc_z_arr[kThisAgentArrayIdx] = loc_z_tmp;
-      loc_y_arr[kThisAgentArrayIdx] = loc_y_tmp;
-      loc_x_arr[kThisAgentArrayIdx] = loc_x_tmp;
+      if (
+        PointIsWithinBounds(
+          kRadius,
+          kSpaceLength,
+          loc_z_tmp,
+          loc_y_tmp,
+          loc_x_tmp
+        )  // && !PointIsOccupied(
+        //   loc_z_arr,
+        //   loc_y_arr,
+        //   loc_x_arr,
+        //   kNumAgents,
+        //   kEnvId,
+        //   kThisAgentId,
+        //   loc_z_tmp,
+        //   loc_y_tmp,
+        //   loc_x_tmp
+        // )
+      ) {
+        // Update the point of the agent
+        loc_z_arr[kThisAgentArrayIdx] = loc_z_tmp;
+        loc_y_arr[kThisAgentArrayIdx] = loc_y_tmp;
+        loc_x_arr[kThisAgentArrayIdx] = loc_x_tmp;
+      }
     }
 
     // Wait here until timestep has been updated
@@ -392,15 +416,18 @@ extern "C" {
       loc_y_arr,
       loc_x_arr,
       orientation_arr,
+      agent_types_arr,
       goal_point_arr,
       obs_arr,
+      action_indices_arr,
       done_arr,
       env_timestep_arr,
       kNumAgents,
       kEpisodeLength,
       kEnvId,
       kThisAgentId,
-      kThisAgentArrayIdx
+      kThisAgentArrayIdx,
+      kNumActions
     );
   }
 }
